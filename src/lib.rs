@@ -1,11 +1,61 @@
 use chrono::{DateTime, Duration, FixedOffset};
+use clap::{Parser, ValueEnum};
 use serde::Deserialize;
+use std::path::PathBuf;
 use std::{
     collections::{HashMap, VecDeque},
     fmt::Display,
     net::IpAddr,
 };
 use uuid::Uuid;
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+pub struct Cli {
+    pub session_id: String,
+
+    /// Path to the CSV containing the sessions data. Any string that can be coerced into a PathBuf
+    #[arg(short, long, default_value = "sessions.csv")]
+    pub sessions_path: PathBuf,
+
+    /// Path to the CSV containing the events data. Any string that can be coerced into a PathBuf
+    #[arg(short, long, default_value = "events.csv")]
+    pub events_path: PathBuf,
+
+    /// The width of the waterfall chart
+    #[arg(short, long, default_value_t = 100)]
+    pub waterfall_width: usize,
+
+    /// Whether to generate span durations in milliseconds or microseconds
+    #[arg(value_enum, short, long, default_value_t = DurationFormat::Millis)]
+    pub duration_format: DurationFormat,
+
+    /// Minimum print width for the duration field, remaining will be filled with spaces
+    #[arg(long, default_value_t = 5)]
+    pub min_duration_width: usize,
+
+    /// Maximum print width for the activity field, remaining will be truncated
+    #[arg(long, default_value_t = 300)]
+    pub max_activity_width: usize,
+
+    /// Whether to show the event uuid
+    #[arg(long)]
+    pub show_event_id: bool,
+
+    /// Whether to show the span ids
+    #[arg(long)]
+    pub show_span_ids: bool,
+
+    /// Whether to show the thread name
+    #[arg(long)]
+    pub show_thread: bool,
+}
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum DurationFormat {
+    Millis,
+    Micros,
+}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct SpanId(i64);
@@ -71,20 +121,19 @@ impl SessionRecord {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Session {
-    id: Uuid,
-    client: IpAddr,
-    command: String,
-    coordinator: IpAddr,
-    duration: Duration,
-    parameters: HashMap<String, String>,
-    request: String,
-    request_size: i32,
-    response_size: i32,
-    started_at: DateTime<FixedOffset>,
-    username: String,
+    pub id: Uuid,
+    pub client: IpAddr,
+    pub command: String,
+    pub coordinator: IpAddr,
+    pub duration: Duration,
+    pub parameters: HashMap<String, String>,
+    pub request: String,
+    pub request_size: i32,
+    pub response_size: i32,
+    pub started_at: DateTime<FixedOffset>,
+    pub username: String,
     root_events: Vec<Event>,
 }
 
@@ -129,6 +178,28 @@ impl Session {
             root_events: root_events.into(),
         })
     }
+
+    pub fn id(&self) -> Uuid {
+        self.id
+    }
+
+    pub fn event_count(&self) -> usize {
+        self.root_events
+            .iter()
+            .map(|e| e.count_including_children())
+            .sum::<usize>()
+    }
+
+    pub fn events(&self) -> Vec<&Event> {
+        let count = self.event_count();
+        let mut events = Vec::with_capacity(count);
+
+        for root_event in &self.root_events {
+            root_event.recurse_events(&mut events);
+        }
+
+        events
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -161,7 +232,6 @@ impl EventRecord {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Event {
     id: Uuid,
@@ -192,6 +262,10 @@ impl Event {
         self.parent_span_id
     }
 
+    pub fn activity_length(&self) -> usize {
+        self.activity.len()
+    }
+
     fn try_add_child(&mut self, child_event: Event) -> Result<(), Event> {
         // Base case, the provided event is a direct child of this event
         if child_event.parent_span_id() == self.span_id() {
@@ -216,6 +290,58 @@ impl Event {
         // Error case, the event was not a direct child not a child of any children.
         // Safe to unwrap here because we always will have returned the object, since it never fit in any of the above events.
         Err(opt.take().unwrap())
+    }
+
+    pub fn display(&self, config: &Cli, min_activity_width: usize) -> String {
+        let duration = match config.duration_format {
+            DurationFormat::Millis => self.source_elapsed.num_milliseconds(),
+            DurationFormat::Micros => self
+                .source_elapsed
+                .num_microseconds()
+                .or(Some(i64::MAX))
+                .unwrap(),
+        };
+        let d_min = config.min_duration_width;
+        let source = self.source;
+        let activity = &self.activity;
+        let a_min = min_activity_width.min(config.max_activity_width);
+        let a_max = config.max_activity_width;
+        let id = if config.show_event_id {
+            format!(" {}", self.id.to_string())
+        } else {
+            String::new()
+        };
+        let span_ids = if config.show_span_ids {
+            format!(
+                " {span_id:20} {parent_span_id:20}",
+                span_id = self.span_id.to_string(),
+                parent_span_id = self.parent_span_id.to_string()
+            )
+        } else {
+            String::new()
+        };
+        let thread = if config.show_thread {
+            format!(" {}", &self.thread)
+        } else {
+            String::new()
+        };
+
+        format!("{duration:d_min$} {source:15} {activity:a_min$.a_max$}{id}{span_ids}{thread}")
+    }
+
+    fn count_including_children(&self) -> usize {
+        1 + self
+            .child_events
+            .iter()
+            .map(|e| e.count_including_children())
+            .sum::<usize>()
+    }
+
+    fn recurse_events<'a>(&'a self, vec: &mut Vec<&'a Event>) {
+        vec.extend(std::iter::once(self));
+        for child in &self.child_events {
+            child.recurse_events(vec);
+        }
     }
 }
 

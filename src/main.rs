@@ -1,21 +1,9 @@
 use anyhow::{anyhow, bail};
 use clap::Parser;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::PathBuf;
+use std::{fs::File, io::BufReader};
 use uuid::Uuid;
 
-use seella::{EventRecord, Session, SessionRecord};
-
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Cli {
-    session_id: String,
-    #[arg(short, long, default_value = "sessions.csv")]
-    sessions_path: PathBuf,
-    #[arg(short, long, default_value = "events.csv")]
-    events_path: PathBuf,
-}
+use seella::{Cli, EventRecord, Session, SessionRecord};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -68,7 +56,29 @@ fn main() -> anyhow::Result<()> {
         );
     }
 
-    let _session = Session::new(session_record, event_records)?;
+    let s = Session::new(session_record, event_records)?;
+
+    println!("Session ID: {}", &s.id());
+    println!("{}", &s.started_at.to_rfc3339());
+    println!(
+        "{:15} ({}) -> {:15}",
+        &s.client, &s.username, &s.coordinator
+    );
+    println!("Request Size:  {}", &s.request_size);
+    println!("Response Size: {}", &s.response_size);
+    println!("{} {}", &s.command, &s.request);
+    println!("{:?}", &s.parameters);
+
+    let events = s.events();
+    let activity_width = events
+        .iter()
+        .map(|e| e.activity_length())
+        .max()
+        .or(Some(0))
+        .unwrap();
+    for e in s.events() {
+        println!("{}", e.display(&cli, activity_width));
+    }
 
     Ok(())
 }
