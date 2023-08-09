@@ -1,9 +1,9 @@
 use clap::Parser;
-use seella::{session_from_files, Cli};
+use seella::{session_from_config, Cli};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    let s = session_from_files(&cli)?;
+    let s = session_from_config(&cli)?;
 
     println!("Session ID: {}", &s.id());
     println!("{}", &s.started_at.to_rfc3339());

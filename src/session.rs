@@ -9,6 +9,19 @@ use std::{
 };
 use uuid::Uuid;
 
+/// All of the information related to a single tracing session.
+///
+/// This is effectively:
+/// ```
+/// SELECT * FROM system_traces.sessions WHERE session_id=227aff60-4f21-11e6-8835-000000000000
+/// JOIN
+/// SELECT * FROM system_traces.events WHERE session_id=227aff60-4f21-11e6-8835-000000000000
+/// ```
+/// This gives us all possible tracing information for a single session, where that session may be a single query,
+/// or some other command.
+///
+/// [Events][Event] can be accessed through the [Session::events()] method, and these will be presented depth-first;
+/// i.e. we provide the children of the first root trace before moving on to the second root trace.
 #[derive(Debug)]
 pub struct Session {
     pub id: Uuid,
@@ -71,6 +84,7 @@ impl Session {
         self.id
     }
 
+    /// Recurses the tree of [events][Event] without needing to allocate or otherwise work too hard.
     pub fn event_count(&self) -> usize {
         self.root_events
             .iter()

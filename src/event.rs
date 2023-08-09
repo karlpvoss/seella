@@ -3,16 +3,17 @@ use chrono::Duration;
 use std::{fmt::Display, net::IpAddr};
 use uuid::Uuid;
 
+/// All of the information related to an event, as well as all child events.
 #[derive(Debug)]
 pub struct Event {
-    id: Uuid,
-    session_id: Uuid,
-    span_id: SpanId,
-    parent_span_id: SpanId,
-    activity: String,
-    source: IpAddr,
-    source_elapsed: Duration,
-    thread: String,
+    pub id: Uuid,
+    pub session_id: Uuid,
+    pub span_id: SpanId,
+    pub parent_span_id: SpanId,
+    pub activity: String,
+    pub source: IpAddr,
+    pub source_elapsed: Duration,
+    pub thread: String,
     child_events: Vec<Event>,
 }
 
@@ -33,6 +34,9 @@ impl Event {
         self.parent_span_id
     }
 
+    /// The length of the string in [Event::activity].
+    ///
+    /// Used for nicer formatting.
     pub fn activity_length(&self) -> usize {
         self.activity.len()
     }
@@ -63,6 +67,22 @@ impl Event {
         Err(opt.take().unwrap())
     }
 
+    /// Generates a texttual representation of the event to display alongside the waterfall view.
+    ///
+    /// This contains, by default, the [span duration][Event::source_elapsed], [source node IP][Event::source],
+    /// and the [activity][Event::activity]:
+    ///
+    /// ```text
+    ///     0 10.17.145.76    Querying is done
+    /// ```
+    ///
+    /// This can be extended with the [config][Cli] to include the [event id][Event::id],
+    /// the [local][Event::span_id] and [parent][Event::parent_span_id] span IDs, and the [thread name][Event::thread]:
+    ///
+    /// ```text
+    ///     0 10.17.145.76    Querying is done     3d07a953-313e-11ee-95bc-69d50677a8c4 75964065742287       191362128677         shard 2
+    /// ```
+    ///
     pub fn display(&self, config: &Cli, min_activity_width: usize) -> String {
         let duration = match config.duration_format {
             DurationFormat::Millis => self.source_elapsed.num_milliseconds(),
@@ -132,6 +152,7 @@ impl From<EventRecord> for Event {
     }
 }
 
+/// Wrapper type for the `i64` used by Scylla for span IDs.
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct SpanId(i64);
 
