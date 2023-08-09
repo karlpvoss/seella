@@ -4,6 +4,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
+    /// The session id to be visualised
     pub session_id: String,
 
     /// Path to the CSV containing the sessions data. Any string that can be coerced into a PathBuf
