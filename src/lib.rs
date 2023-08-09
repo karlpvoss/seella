@@ -3,15 +3,16 @@ mod event;
 mod records;
 mod session;
 
-use crate::{
-    records::{EventRecord, SessionRecord},
-    session::Session,
-};
+use crate::records::{EventRecord, SessionRecord};
 use anyhow::{anyhow, bail};
 use std::{fs::File, io::BufReader};
 use uuid::Uuid;
 
-pub use cli::Cli;
+pub use {
+    cli::Cli,
+    event::{Event, SpanId},
+    session::Session,
+};
 
 pub fn session_from_files(cli: &Cli) -> anyhow::Result<Session> {
     let session_id = Uuid::try_parse(&cli.session_id)?;

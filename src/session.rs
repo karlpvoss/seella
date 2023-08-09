@@ -26,7 +26,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub fn new(
+    pub(crate) fn new(
         session_record: SessionRecord,
         event_records: Vec<EventRecord>,
     ) -> Result<Self, serde_json::Error> {
