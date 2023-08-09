@@ -18,22 +18,6 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn id(&self) -> Uuid {
-        self.id
-    }
-
-    pub fn session_id(&self) -> Uuid {
-        self.session_id
-    }
-
-    pub fn span_id(&self) -> SpanId {
-        self.span_id
-    }
-
-    pub fn parent_span_id(&self) -> SpanId {
-        self.parent_span_id
-    }
-
     /// The length of the string in [Event::activity].
     ///
     /// Used for nicer formatting.
@@ -43,7 +27,7 @@ impl Event {
 
     pub(crate) fn try_add_child(&mut self, child_event: Event) -> Result<(), Event> {
         // Base case, the provided event is a direct child of this event
-        if child_event.parent_span_id() == self.span_id() {
+        if child_event.parent_span_id == self.span_id {
             self.child_events.push(child_event);
             return Ok(());
         }

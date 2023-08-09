@@ -5,7 +5,7 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let s = session_from_config(&cli)?;
 
-    println!("Session ID: {}", &s.id());
+    println!("Session ID: {}", &s.id);
     println!("{}", &s.started_at.to_rfc3339());
     println!(
         "{:15} ({}) -> {:15}",

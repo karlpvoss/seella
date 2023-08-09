@@ -46,7 +46,7 @@ impl Session {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
             .map(|record| Event::from(record))
-            .partition(|event| event.parent_span_id().is_root());
+            .partition(|event| event.parent_span_id.is_root());
 
         'child_events: while let Some(child_event) = child_events.pop_front() {
             let mut opt = Some(child_event);
@@ -78,10 +78,6 @@ impl Session {
             username: session_record.username(),
             root_events: root_events.into(),
         })
-    }
-
-    pub fn id(&self) -> Uuid {
-        self.id
     }
 
     /// Recurses the tree of [events][Event] without needing to allocate or otherwise work too hard.
