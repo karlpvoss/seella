@@ -1,5 +1,5 @@
 use clap::Parser;
-use seella::{session_from_config, Cli};
+use seella::{event_display_str, session_from_config, Cli};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -25,23 +25,46 @@ fn main() -> anyhow::Result<()> {
     let events = s.events();
     let a_max_width = events
         .iter()
-        .map(|e| e.activity_length())
+        .map(|(e, _)| e.activity_length())
         .max()
         .or(Some(0))
         .unwrap();
+    let max_depth = events
+        .iter()
+        .map(|(_, depth)| *depth)
+        .max()
+        .or(Some(1usize))
+        .unwrap();
     let i_max_width = s.event_count().to_string().len();
 
-    for (i, e) in events.iter().enumerate() {
-        let waterfall = e.waterfall(offset, s_start, s_end);
+    // Headers
+    println!(
+        "{:i_max_width$} {:102} {}",
+        "",
+        "waterfall chart",
+        event_display_str(
+            &cli,
+            a_max_width,
+            "dur",
+            "node",
+            &format!("{:tree_width$}", "", tree_width = max_depth + 2),
+            "activity",
+            "event id",
+            "span id",
+            "parent span id",
+            "thread name",
+        )
+    );
 
+    for (i, (e, depth)) in events.iter().enumerate() {
         println!(
             "{:i_max_width$} {} {}",
             i + 1,
-            waterfall,
-            e.display(&cli, a_max_width)
+            e.waterfall(offset, s_start, s_end),
+            e.display(&cli, a_max_width, *depth, max_depth)
         );
 
-        // Move the offset up for the next root event
+        // Move the offset up for the next event
         offset += e.durations().1;
     }
 

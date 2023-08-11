@@ -25,32 +25,6 @@ impl Event {
         self.activity.len()
     }
 
-    pub(crate) fn try_add_child(&mut self, child_event: Event) -> Result<(), Event> {
-        // Base case, the provided event is a direct child of this event
-        if child_event.parent_span_id == self.span_id {
-            self.child_events.push(child_event);
-            return Ok(());
-        }
-
-        // Recursion case, need to see if it is a child of any children
-        let mut opt = Some(child_event);
-        for event in &mut self.child_events {
-            // Safe to unwrap here because we will always put it back if the below returns Err
-            let child_event = opt.take().unwrap();
-            match event.try_add_child(child_event) {
-                Ok(_) => return Ok(()),
-                Err(child_event) => {
-                    opt = Some(child_event);
-                    continue;
-                }
-            }
-        }
-
-        // Error case, the event was not a direct child not a child of any children.
-        // Safe to unwrap here because we always will have returned the object, since it never fit in any of the above events.
-        Err(opt.take().unwrap())
-    }
-
     /// Return the total duration of this span and it's children, and the duration of just this span.
     ///
     /// First field is the total, second field is just this span.
@@ -117,40 +91,50 @@ impl Event {
     ///     0 10.17.145.76    Querying is done     3d07a953-313e-11ee-95bc-69d50677a8c4 75964065742287       191362128677         shard 2
     /// ```
     ///
-    pub fn display(&self, config: &Cli, min_activity_width: usize) -> String {
+    pub fn display(
+        &self,
+        config: &Cli,
+        min_activity_width: usize,
+        depth: usize,
+        max_depth: usize,
+    ) -> String {
         let duration = match config.duration_format {
             DurationFormat::Millis => self.duration.num_milliseconds(),
             DurationFormat::Micros => self
                 .duration
                 .num_microseconds()
                 .expect(COMPLAIN_ABOUT_TRACE_SIZE),
-        };
-        let d_min = config.min_duration_width;
-        let source = self.source;
+        }
+        .to_string();
+        let source = self.source.to_string();
         let activity = &self.activity;
-        let a_min = min_activity_width.min(config.max_activity_width);
-        let a_max = config.max_activity_width;
-        let id = if config.show_event_id {
-            format!(" {}", self.id.to_string())
-        } else {
-            String::new()
-        };
-        let span_ids = if config.show_span_ids {
-            format!(
-                " {span_id:20} {parent_span_id:20}",
-                span_id = self.span_id.to_string(),
-                parent_span_id = self.parent_span_id.to_string()
-            )
-        } else {
-            String::new()
-        };
-        let thread = if config.show_thread {
-            format!(" {}", &self.thread)
-        } else {
-            String::new()
-        };
+        let event_id = self.id.to_string();
+        let span_id = self.span_id.to_string();
+        let parent_span_id = self.parent_span_id.to_string();
 
-        format!("{duration:d_min$} {source:15} {activity:a_min$.a_max$}{id}{span_ids}{thread}")
+        // Activity tree
+        let mut tree_bit = format!("{:│>t_depth$}", "├", t_depth = depth + 1);
+        if self.is_parent() {
+            tree_bit.push_str("┬");
+        }
+        let tree = format!("{tree_bit:─<t_depth$}", t_depth = max_depth + 2);
+
+        event_display_str(
+            config,
+            min_activity_width,
+            &duration,
+            &source,
+            &tree,
+            &activity,
+            &event_id,
+            &span_id,
+            &parent_span_id,
+            &self.thread,
+        )
+    }
+
+    pub(crate) fn is_parent(&self) -> bool {
+        !self.child_events.is_empty()
     }
 
     pub(crate) fn count_including_children(&self) -> usize {
@@ -161,11 +145,37 @@ impl Event {
             .sum::<usize>()
     }
 
-    pub(crate) fn recurse_events<'a>(&'a self, vec: &mut Vec<&'a Event>) {
-        vec.extend(std::iter::once(self));
+    pub(crate) fn recurse_events<'a>(&'a self, vec: &mut Vec<(&'a Event, usize)>, depth: usize) {
+        vec.extend(std::iter::once((self, depth)));
         for child in &self.child_events {
-            child.recurse_events(vec);
+            child.recurse_events(vec, depth + 1);
         }
+    }
+
+    pub(crate) fn try_add_child(&mut self, child_event: Event) -> Result<(), Event> {
+        // Base case, the provided event is a direct child of this event
+        if child_event.parent_span_id == self.span_id {
+            self.child_events.push(child_event);
+            return Ok(());
+        }
+
+        // Recursion case, need to see if it is a child of any children
+        let mut opt = Some(child_event);
+        for event in &mut self.child_events {
+            // Safe to unwrap here because we will always put it back if the below returns Err
+            let child_event = opt.take().unwrap();
+            match event.try_add_child(child_event) {
+                Ok(_) => return Ok(()),
+                Err(child_event) => {
+                    opt = Some(child_event);
+                    continue;
+                }
+            }
+        }
+
+        // Error case, the event was not a direct child not a child of any children.
+        // Safe to unwrap here because we always will have returned the object, since it never fit in any of the above events.
+        Err(opt.take().unwrap())
     }
 }
 
@@ -183,6 +193,37 @@ impl From<EventRecord> for Event {
             child_events: Vec::new(),
         }
     }
+}
+
+pub fn event_display_str(
+    config: &Cli,
+    min_activity_width: usize,
+    duration: &str,
+    source: &str,
+    tree: &str,
+    activity: &str,
+    event_id: &str,
+    span_id: &str,
+    parent_span_id: &str,
+    thread: &str,
+) -> String {
+    let d_min = config.min_duration_width;
+    let a_min = min_activity_width.min(config.max_activity_width);
+    let a_max = config.max_activity_width;
+
+    let mut output = format!("{duration:d_min$} {source:15} {tree} {activity:a_min$.a_max$}");
+
+    if config.show_event_id {
+        output.push_str(&format!(" {event_id:37}"));
+    }
+    if config.show_span_ids {
+        output.push_str(&format!(" {span_id:20} {parent_span_id:20}"));
+    }
+    if config.show_thread {
+        output.push_str(&format!(" {thread}"));
+    }
+
+    output
 }
 
 /// Wrapper type for the `i64` used by Scylla for span IDs.

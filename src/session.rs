@@ -89,12 +89,12 @@ impl Session {
     }
 
     /// Depth-first recursion of all events in the tree.
-    pub fn events(&self) -> Vec<&Event> {
+    pub fn events(&self) -> Vec<(&Event, usize)> {
         let count = self.event_count();
         let mut events = Vec::with_capacity(count);
 
         for root_event in &self.root_events {
-            root_event.recurse_events(&mut events);
+            root_event.recurse_events(&mut events, 0);
         }
 
         events

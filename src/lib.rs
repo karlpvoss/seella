@@ -31,7 +31,7 @@ use uuid::Uuid;
 
 pub use {
     cli::Cli,
-    event::{Event, SpanId},
+    event::{event_display_str, Event, SpanId},
     session::Session,
 };
 
