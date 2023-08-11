@@ -21,11 +21,11 @@ pub struct Cli {
     pub waterfall_width: usize,
 
     /// Whether to generate span durations in milliseconds or microseconds
-    #[arg(value_enum, short, long, default_value_t = DurationFormat::Millis)]
+    #[arg(value_enum, short, long, default_value_t = DurationFormat::Micros)]
     pub duration_format: DurationFormat,
 
     /// Minimum print width for the duration field, remaining will be filled with spaces
-    #[arg(long, default_value_t = 5)]
+    #[arg(long, default_value_t = 6)]
     pub min_duration_width: usize,
 
     /// Maximum print width for the activity field, remaining will be truncated

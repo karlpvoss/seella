@@ -1,4 +1,4 @@
-use crate::{cli::DurationFormat, records::EventRecord, Cli};
+use crate::{cli::DurationFormat, records::EventRecord, Cli, COMPLAIN_ABOUT_TRACE_SIZE};
 use chrono::Duration;
 use std::{fmt::Display, net::IpAddr};
 use uuid::Uuid;
@@ -12,7 +12,7 @@ pub struct Event {
     pub parent_span_id: SpanId,
     pub activity: String,
     pub source: IpAddr,
-    pub source_elapsed: Duration,
+    pub duration: Duration,
     pub thread: String,
     child_events: Vec<Event>,
 }
@@ -51,6 +51,56 @@ impl Event {
         Err(opt.take().unwrap())
     }
 
+    /// Return the total duration of this span and it's children, and the duration of just this span.
+    ///
+    /// First field is the total, second field is just this span.
+    pub fn durations(&self) -> (i64, i64) {
+        let self_dur = self
+            .duration
+            .num_microseconds()
+            .expect(COMPLAIN_ABOUT_TRACE_SIZE);
+
+        (self_dur + self.sum_of_child_durations(), self_dur)
+    }
+
+    /// Returns the total sum of all children's durations.
+    pub fn sum_of_child_durations(&self) -> i64 {
+        self.child_events
+            .iter()
+            .map(|e| e.durations().0)
+            .fold(0, |acc, dur| acc + dur)
+    }
+
+    pub fn waterfall(&self, offset: i64, s_start: i64, s_end: i64) -> String {
+        let (total_dur, self_dur) = self.durations();
+        let e_start = offset;
+        let e_end = s_start + offset + self_dur;
+        let e_tail = s_start + offset + total_dur;
+
+        // Calculate positions as a factor of the waterfall width
+        let e_start_pos = (e_start as f64 * 100.0 / s_end as f64).floor() as usize;
+        let e_end_pos =
+            ((e_end as f64 * 100.0 / s_end as f64).floor() as usize).max(e_start_pos + 1);
+        let e_tail_pos =
+            ((e_tail as f64 * 100.0 / s_end as f64).floor() as usize).max(e_start_pos + 1);
+
+        assert!(e_start_pos < e_end_pos);
+
+        let block_width = e_end_pos - e_start_pos;
+        let tail_width = e_tail_pos - e_end_pos;
+        let rem_width = 100 - e_start_pos - block_width - tail_width;
+
+        let tail = match tail_width {
+            0 => "",
+            _ => "┤",
+        };
+
+        format!(
+            "[{:<e_start_pos$}{:█<block_width$}{tail:─>tail_width$}{:<rem_width$}]",
+            "", "", ""
+        )
+    }
+
     /// Generates a texttual representation of the event to display alongside the waterfall view.
     ///
     /// This contains, by default, the [span duration][Event::source_elapsed], [source node IP][Event::source],
@@ -69,12 +119,11 @@ impl Event {
     ///
     pub fn display(&self, config: &Cli, min_activity_width: usize) -> String {
         let duration = match config.duration_format {
-            DurationFormat::Millis => self.source_elapsed.num_milliseconds(),
+            DurationFormat::Millis => self.duration.num_milliseconds(),
             DurationFormat::Micros => self
-                .source_elapsed
+                .duration
                 .num_microseconds()
-                .or(Some(i64::MAX))
-                .unwrap(),
+                .expect(COMPLAIN_ABOUT_TRACE_SIZE),
         };
         let d_min = config.min_duration_width;
         let source = self.source;
@@ -129,7 +178,7 @@ impl From<EventRecord> for Event {
             parent_span_id: value.scylla_parent_id.into(),
             activity: value.activity(),
             source: value.source,
-            source_elapsed: Duration::microseconds(value.source_elapsed.into()),
+            duration: Duration::microseconds(value.source_elapsed.into()),
             thread: value.thread(),
             child_events: Vec::new(),
         }

@@ -35,6 +35,9 @@ pub use {
     session::Session,
 };
 
+pub(crate) const COMPLAIN_ABOUT_TRACE_SIZE: &'static str =
+    "what are you doing with 2^63 microseconds in a single trace!";
+
 /// Constructs a Session instance from the files given in the [cli][Cli] config.
 ///
 /// This [Session] instance contains all of the information available from the `session.csv` file, as well as all

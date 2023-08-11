@@ -88,6 +88,7 @@ impl Session {
             .sum::<usize>()
     }
 
+    /// Depth-first recursion of all events in the tree.
     pub fn events(&self) -> Vec<&Event> {
         let count = self.event_count();
         let mut events = Vec::with_capacity(count);
@@ -97,5 +98,15 @@ impl Session {
         }
 
         events
+    }
+
+    /// Returns the total duration of the trace.
+    ///
+    /// Given by summing the total durations of all root traces.
+    pub fn total_duration(&self) -> i64 {
+        self.root_events
+            .iter()
+            .map(|e| e.durations().0)
+            .fold(0, |acc, dur| acc + dur)
     }
 }
