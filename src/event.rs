@@ -39,10 +39,7 @@ impl Event {
 
     /// Returns the total sum of all children's durations.
     pub fn sum_of_child_durations(&self) -> i64 {
-        self.child_events
-            .iter()
-            .map(|e| e.durations().0)
-            .fold(0, |acc, dur| acc + dur)
+        self.child_events.iter().map(|e| e.durations().0).sum()
     }
 
     pub fn waterfall(&self, offset: i64, s_start: i64, s_end: i64) -> String {
@@ -115,7 +112,7 @@ impl Event {
         // Activity tree
         let mut tree_bit = format!("{:│>t_depth$}", "├", t_depth = depth + 1);
         if self.is_parent() {
-            tree_bit.push_str("┬");
+            tree_bit.push('┬');
         }
         let tree = format!("{tree_bit:─<t_depth$}", t_depth = max_depth + 2);
 
@@ -125,7 +122,7 @@ impl Event {
             &duration,
             &source,
             &tree,
-            &activity,
+            activity,
             &event_id,
             &span_id,
             &parent_span_id,
@@ -195,6 +192,7 @@ impl From<EventRecord> for Event {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn event_display_str(
     config: &Cli,
     min_activity_width: usize,

@@ -45,7 +45,7 @@ impl Session {
     ) -> Result<Self, serde_json::Error> {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
-            .map(|record| Event::from(record))
+            .map(Event::from)
             .partition(|event| event.parent_span_id.is_root());
 
         'child_events: while let Some(child_event) = child_events.pop_front() {
@@ -104,9 +104,6 @@ impl Session {
     ///
     /// Given by summing the total durations of all root traces.
     pub fn total_duration(&self) -> i64 {
-        self.root_events
-            .iter()
-            .map(|e| e.durations().0)
-            .fold(0, |acc, dur| acc + dur)
+        self.root_events.iter().map(|e| e.durations().0).sum()
     }
 }

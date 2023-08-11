@@ -27,14 +27,8 @@ fn main() -> anyhow::Result<()> {
         .iter()
         .map(|(e, _)| e.activity_length())
         .max()
-        .or(Some(0))
-        .unwrap();
-    let max_depth = events
-        .iter()
-        .map(|(_, depth)| *depth)
-        .max()
-        .or(Some(1usize))
-        .unwrap();
+        .unwrap_or(0);
+    let max_depth = events.iter().map(|(_, depth)| *depth).max().unwrap_or(1);
     let i_max_width = s.event_count().to_string().len();
 
     // Headers
