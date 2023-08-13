@@ -5,6 +5,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Karl Voss <karl.p.voss@gmail.com>"]
 repository = "https://github.com/karlpvoss/seella"
+readme = "README.md"
 license = "MIT"
 keywords = ["scylla", "scylladb", "tracing", "visualise"]
 categories = ["development-tools::debugging", "visualization", "database"]
