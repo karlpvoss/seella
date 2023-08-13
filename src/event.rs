@@ -53,7 +53,7 @@ impl Event {
     /// ```
     ///
     /// `offset` is the time in microseconds since the start of the trace to this span.
-    /// `session_duration` is the total duration of the [Session].
+    /// `session_duration` is the total duration of the session.
     pub fn waterfall(&self, config: &Cli, offset: i64, session_duration: i64) -> String {
         let (total_dur, self_dur) = self.durations();
         let e_start = offset;
@@ -205,6 +205,9 @@ impl From<EventRecord> for Event {
     }
 }
 
+/// Generates the formatted string used by [Event::display].
+///
+/// Here to allow us to re-use the same formatting options for the headers.
 #[allow(clippy::too_many_arguments)]
 pub fn event_display_str(
     config: &Cli,
