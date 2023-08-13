@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
 
     // Headers
     println!(
-        "{:i_max_width$} {:102} {}",
+        "{:i_max_width$} {:w_width$} {}",
         "",
         "waterfall chart",
         event_display_str(
@@ -46,14 +46,15 @@ fn main() -> anyhow::Result<()> {
             "span id",
             "parent span id",
             "thread name",
-        )
+        ),
+        w_width = cli.waterfall_width + 2
     );
 
     for (i, (e, depth)) in events.iter().enumerate() {
         println!(
             "{:i_max_width$} {} {}",
             i + 1,
-            e.waterfall(offset, s_end),
+            e.waterfall(&cli, offset, s_end),
             e.display(&cli, a_max_width, *depth, max_depth)
         );
 

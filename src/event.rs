@@ -54,22 +54,25 @@ impl Event {
     ///
     /// `offset` is the time in microseconds since the start of the trace to this span.
     /// `session_duration` is the total duration of the [Session].
-    pub fn waterfall(&self, offset: i64, session_duration: i64) -> String {
+    pub fn waterfall(&self, config: &Cli, offset: i64, session_duration: i64) -> String {
         let (total_dur, self_dur) = self.durations();
         let e_start = offset;
         let e_end = offset + self_dur;
         let e_tail = offset + total_dur;
 
         // Calculate positions as a factor of the waterfall width
-        let e_start_pos = (e_start as f64 * 100.0 / session_duration as f64).floor() as usize;
-        let e_end_pos = ((e_end as f64 * 100.0 / session_duration as f64).floor() as usize)
+        let e_start_pos = (e_start as f64 * config.waterfall_width as f64 / session_duration as f64)
+            .floor() as usize;
+        let e_end_pos = ((e_end as f64 * config.waterfall_width as f64 / session_duration as f64)
+            .floor() as usize)
             .max(e_start_pos + 1);
-        let e_tail_pos = ((e_tail as f64 * 100.0 / session_duration as f64).floor() as usize)
+        let e_tail_pos = ((e_tail as f64 * config.waterfall_width as f64 / session_duration as f64)
+            .floor() as usize)
             .max(e_start_pos + 1);
 
         let block_width = e_end_pos - e_start_pos;
         let tail_width = e_tail_pos - e_end_pos;
-        let rem_width = 100 - e_start_pos - block_width - tail_width;
+        let rem_width = config.waterfall_width - e_start_pos - block_width - tail_width;
 
         let tail = match tail_width {
             0 => "",
