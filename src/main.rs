@@ -18,7 +18,6 @@ fn main() -> anyhow::Result<()> {
     println!("{:?}", &s.parameters);
 
     // Calculations for the waterfall boxes
-    let s_start = 0i64;
     let s_end = s.total_duration();
     let mut offset = 0i64;
 
@@ -54,7 +53,7 @@ fn main() -> anyhow::Result<()> {
         println!(
             "{:i_max_width$} {} {}",
             i + 1,
-            e.waterfall(offset, s_start, s_end),
+            e.waterfall(offset, s_end),
             e.display(&cli, a_max_width, *depth, max_depth)
         );
 

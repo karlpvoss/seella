@@ -1,7 +1,7 @@
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
-/// Configuration for the clap parser driving the binary.
+/// A tool for visualising the traces emitted by ScyllaDB.
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {

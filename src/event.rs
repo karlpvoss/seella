@@ -42,20 +42,30 @@ impl Event {
         self.child_events.iter().map(|e| e.durations().0).sum()
     }
 
-    pub fn waterfall(&self, offset: i64, s_start: i64, s_end: i64) -> String {
+    /// Generate a waterfall chart from the trace data.
+    ///
+    /// The intention of this is to show the proportion of the total trace taken up by this span,
+    /// and where it lies relative to the start and end of the span.
+    ///
+    /// This is in the format of:
+    /// ```text
+    /// [  <blank spaces>  █████<duration of the span>█████───<duration of child spans>───┤   <blank spaces>   ]
+    /// ```
+    ///
+    /// `offset` is the time in microseconds since the start of the trace to this span.
+    /// `session_duration` is the total duration of the [Session].
+    pub fn waterfall(&self, offset: i64, session_duration: i64) -> String {
         let (total_dur, self_dur) = self.durations();
         let e_start = offset;
-        let e_end = s_start + offset + self_dur;
-        let e_tail = s_start + offset + total_dur;
+        let e_end = offset + self_dur;
+        let e_tail = offset + total_dur;
 
         // Calculate positions as a factor of the waterfall width
-        let e_start_pos = (e_start as f64 * 100.0 / s_end as f64).floor() as usize;
-        let e_end_pos =
-            ((e_end as f64 * 100.0 / s_end as f64).floor() as usize).max(e_start_pos + 1);
-        let e_tail_pos =
-            ((e_tail as f64 * 100.0 / s_end as f64).floor() as usize).max(e_start_pos + 1);
-
-        assert!(e_start_pos < e_end_pos);
+        let e_start_pos = (e_start as f64 * 100.0 / session_duration as f64).floor() as usize;
+        let e_end_pos = ((e_end as f64 * 100.0 / session_duration as f64).floor() as usize)
+            .max(e_start_pos + 1);
+        let e_tail_pos = ((e_tail as f64 * 100.0 / session_duration as f64).floor() as usize)
+            .max(e_start_pos + 1);
 
         let block_width = e_end_pos - e_start_pos;
         let tail_width = e_tail_pos - e_end_pos;
