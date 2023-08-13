@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use serde::Deserialize;
-use std::{collections::HashMap, net::IpAddr};
+use std::net::IpAddr;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
@@ -27,10 +27,8 @@ impl SessionRecord {
         self.command.clone()
     }
 
-    pub fn parameters(&self) -> Result<HashMap<String, String>, serde_json::Error> {
-        // Since this is coming out of a double-quoted CSV, all double quotes within the string should already be escaped.
-        // Therefore, it should be safe to replace all single quotes with double quotes and call it JSON.
-        serde_json::from_str(&self.parameters.clone().replace('\'', "\""))
+    pub fn parameters(&self) -> String {
+        self.parameters.clone()
     }
 
     pub fn request(&self) -> String {

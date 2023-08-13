@@ -107,5 +107,5 @@ pub fn session_from_config(cli: &Cli) -> anyhow::Result<Session> {
         );
     }
 
-    Ok(Session::new(session_record, event_records)?)
+    Ok(Session::new(session_record, event_records))
 }

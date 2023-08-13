@@ -31,6 +31,7 @@ fn main() -> anyhow::Result<()> {
     let i_max_width = s.event_count().to_string().len();
 
     // Headers
+    println!();
     println!(
         "{:i_max_width$} {:w_width$} {}",
         "",

@@ -3,10 +3,7 @@ use crate::{
     records::{EventRecord, SessionRecord},
 };
 use chrono::{DateTime, Duration, FixedOffset};
-use std::{
-    collections::{HashMap, VecDeque},
-    net::IpAddr,
-};
+use std::{collections::VecDeque, net::IpAddr};
 use uuid::Uuid;
 
 /// All of the information related to a single tracing session.
@@ -29,7 +26,7 @@ pub struct Session {
     pub command: String,
     pub coordinator: IpAddr,
     pub duration: Duration,
-    pub parameters: HashMap<String, String>,
+    pub parameters: String,
     pub request: String,
     pub request_size: i32,
     pub response_size: i32,
@@ -39,10 +36,7 @@ pub struct Session {
 }
 
 impl Session {
-    pub(crate) fn new(
-        session_record: SessionRecord,
-        event_records: Vec<EventRecord>,
-    ) -> Result<Self, serde_json::Error> {
+    pub(crate) fn new(session_record: SessionRecord, event_records: Vec<EventRecord>) -> Self {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
             .map(Event::from)
@@ -64,20 +58,20 @@ impl Session {
             child_events.push_back(opt.take().unwrap());
         }
 
-        Ok(Self {
+        Self {
             id: session_record.session_id,
             client: session_record.client,
             command: session_record.command(),
             coordinator: session_record.coordinator,
             duration: Duration::microseconds(session_record.duration.into()),
-            parameters: session_record.parameters()?,
+            parameters: session_record.parameters(),
             request: session_record.request(),
             request_size: session_record.request_size,
             response_size: session_record.response_size,
             started_at: session_record.started_at,
             username: session_record.username(),
             root_events: root_events.into(),
-        })
+        }
     }
 
     /// Recurses the tree of [events][Event] without needing to allocate or otherwise work too hard.
