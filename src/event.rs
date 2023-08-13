@@ -87,7 +87,7 @@ impl Event {
 
     /// Generates a texttual representation of the event to display alongside the waterfall view.
     ///
-    /// This contains, by default, the [span duration][Event::source_elapsed], [source node IP][Event::source],
+    /// This contains, by default, the [span duration][Event::duration], [source node IP][Event::source],
     /// and the [activity][Event::activity]:
     ///
     /// ```text
