@@ -9,11 +9,13 @@ use uuid::Uuid;
 /// All of the information related to a single tracing session.
 ///
 /// This is effectively:
-/// ```
+///
+/// ```text
 /// SELECT * FROM system_traces.sessions WHERE session_id=227aff60-4f21-11e6-8835-000000000000
 /// JOIN
 /// SELECT * FROM system_traces.events WHERE session_id=227aff60-4f21-11e6-8835-000000000000
 /// ```
+///
 /// This gives us all possible tracing information for a single session, where that session may be a single query,
 /// or some other command.
 ///

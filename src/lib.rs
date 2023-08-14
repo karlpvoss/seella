@@ -1,23 +1,4 @@
 //! A tool for visualising the traces emitted by ScyllaDB.
-//!
-//! Use it like so!
-//! ```rust
-//! # use clap::Parser;
-//! # use seella::{session_from_config, Cli};
-//! # fn main() -> anyhow::Result<()> {
-//! let cli = Cli::parse();
-//! let s = session_from_config(&cli)?;
-//!
-//! println!("Session ID: {}", &s.id());
-//! println!("{}", &s.started_at.to_rfc3339());
-//!
-//! for e in s.events() {
-//!     println!("{}", e.display(&cli, 100));
-//! }
-//!
-//! # Ok(())
-//! # }
-//! ```
 
 mod cli;
 mod event;
@@ -42,21 +23,6 @@ pub(crate) const COMPLAIN_ABOUT_TRACE_SIZE: &str =
 ///
 /// This [Session] instance contains all of the information available from the `session.csv` file, as well as all
 /// of the information for the [events][Event] relating to that session from the `events.csv` file.
-///
-/// ```rust
-/// # use clap::Parser;
-/// # use seella::{session_from_config, Cli};
-/// # fn main() -> anyhow::Result<()> {
-/// let cli = Cli::parse();
-/// let session = session_from_config(&cli)?;
-/// println!("Session ID: {}", &session.id());
-/// println!("{}", &session.started_at.to_rfc3339());
-///
-/// for event in session.events() {
-///     println!("{}", event.id());
-/// }
-/// # }
-/// ```
 pub fn session_from_config(cli: &Cli) -> anyhow::Result<Session> {
     let session_id = Uuid::try_parse(&cli.session_id)?;
 
