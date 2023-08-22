@@ -1,77 +1,35 @@
 //! A tool for visualising the traces emitted by ScyllaDB.
 
 mod cli;
+mod csv;
+mod data_source;
 mod event;
 mod records;
 mod session;
 
-use crate::records::{EventRecord, SessionRecord};
-use anyhow::{anyhow, bail};
-use std::{fs::File, io::BufReader};
 use uuid::Uuid;
 
 pub use {
+    crate::csv::{CsvParsingError, CsvSource},
     cli::Cli,
+    data_source::DataSource,
     event::{event_display_str, Event, SpanId},
+    records::{EventRecord, SessionRecord},
     session::Session,
 };
 
-pub(crate) const COMPLAIN_ABOUT_TRACE_SIZE: &str =
+/// It's possible for a [chrono::Duration] to have more than 2^63 microseconds and overflow, we ignore that possibility.
+pub const COMPLAIN_ABOUT_TRACE_SIZE: &str =
     "what are you doing with 2^63 microseconds in a single trace!";
 
 /// Constructs a Session instance from the files given in the [cli][Cli] config.
 ///
 /// This [Session] instance contains all of the information available from the `session.csv` file, as well as all
 /// of the information for the [events][Event] relating to that session from the `events.csv` file.
-pub fn session_from_config(cli: &Cli) -> anyhow::Result<Session> {
+pub fn session_from_config(cli: &Cli) -> Result<Session, Box<dyn std::error::Error>> {
     let session_id = Uuid::try_parse(&cli.session_id)?;
-
-    let mut session_deserialization_errors = Vec::new();
-    let session_record = csv::Reader::from_reader(BufReader::new(File::open(&cli.sessions_path)?))
-        .deserialize::<SessionRecord>()
-        .filter_map(|record_res| {
-            record_res
-                .map_err(|err| session_deserialization_errors.push(err))
-                .ok()
-        })
-        .find(|record| record.id() == session_id)
-        .ok_or(anyhow!(
-            "could not find the session with id: {}",
-            session_id
-        ))?;
-
-    if !session_deserialization_errors.is_empty() {
-        for error in session_deserialization_errors {
-            eprintln!("{}", error);
-        }
-        bail!(
-            "errors were experienced deserializing sessions from {:?}",
-            &cli.sessions_path
-        );
-    }
-
-    let mut event_deserialization_errors = Vec::new();
-    let event_records: Vec<EventRecord> =
-        csv::Reader::from_reader(BufReader::new(File::open(&cli.events_path)?))
-            .deserialize::<EventRecord>()
-            .filter_map(|record_res| {
-                record_res
-                    .map_err(|err| event_deserialization_errors.push(err))
-                    .ok()
-            })
-            .filter(|record| record.session_id() == session_id)
-            .collect();
-
-    if !event_deserialization_errors.is_empty() {
-        for error in event_deserialization_errors {
-            eprintln!("{}", error);
-        }
-
-        bail!(
-            "errors were experienced deserializing events from {:?}",
-            &cli.events_path
-        );
-    }
+    let (session_record, event_records) =
+        CsvSource::new(&cli.sessions_path, &cli.events_path, session_id).get_data()?;
 
     Ok(Session::new(session_record, event_records))
 }

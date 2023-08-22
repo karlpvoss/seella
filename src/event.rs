@@ -1,19 +1,32 @@
 use crate::{cli::DurationFormat, records::EventRecord, Cli, COMPLAIN_ABOUT_TRACE_SIZE};
 use chrono::Duration;
+use serde::Deserialize;
 use std::{fmt::Display, net::IpAddr};
 use uuid::Uuid;
 
 /// All of the information related to an event, as well as all child events.
 #[derive(Debug)]
 pub struct Event {
+    /// The UUID of the Event
     pub id: Uuid,
+    /// The UUID of the Session
     pub session_id: Uuid,
-    pub span_id: SpanId,
-    pub parent_span_id: SpanId,
+    /// What is being done in this Event
     pub activity: String,
+    /// The source IP for this Event
     pub source: IpAddr,
+    /// Duration of this only this Event, not including child events
     pub duration: Duration,
+    /// The name of the thread from which this Event originated
     pub thread: String,
+
+    /// Unique identifier for this Event's span
+    /// Not present in Cassandra
+    pub span_id: SpanId,
+    /// Span ID for this Event's parent. Used to identity the tree structure
+    /// Not present in Cassandra
+    pub parent_span_id: SpanId,
+
     child_events: Vec<Event>,
 }
 
@@ -116,11 +129,6 @@ impl Event {
                 .expect(COMPLAIN_ABOUT_TRACE_SIZE),
         }
         .to_string();
-        let source = self.source.to_string();
-        let activity = &self.activity;
-        let event_id = self.id.to_string();
-        let span_id = self.span_id.to_string();
-        let parent_span_id = self.parent_span_id.to_string();
 
         // Activity tree
         let mut tree_bit = format!("{:│>t_depth$}", "├", t_depth = depth + 1);
@@ -133,12 +141,12 @@ impl Event {
             config,
             min_activity_width,
             &duration,
-            &source,
+            &self.source.to_string(),
             &tree,
-            activity,
-            &event_id,
-            &span_id,
-            &parent_span_id,
+            &self.activity,
+            &self.id.to_string(),
+            &self.span_id.to_string(),
+            &self.parent_span_id.to_string(),
             &self.thread,
         )
     }
@@ -194,12 +202,13 @@ impl From<EventRecord> for Event {
         Self {
             id: value.event_id,
             session_id: value.session_id,
-            span_id: value.scylla_span_id.into(),
-            parent_span_id: value.scylla_parent_id.into(),
-            activity: value.activity(),
+            // Use of unwrap_or_default effectively makes Events with missing span ids root events, which is the Cassandra behaviour
+            span_id: value.scylla_span_id.unwrap_or_default(),
+            parent_span_id: value.scylla_parent_id.unwrap_or_default(),
+            activity: value.activity,
             source: value.source,
             duration: Duration::microseconds(value.source_elapsed.into()),
-            thread: value.thread(),
+            thread: value.thread,
             child_events: Vec::new(),
         }
     }
@@ -241,7 +250,7 @@ pub fn event_display_str(
 }
 
 /// Wrapper type for the `i64` used by Scylla for span IDs.
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Default, Deserialize)]
 pub struct SpanId(i64);
 
 impl SpanId {

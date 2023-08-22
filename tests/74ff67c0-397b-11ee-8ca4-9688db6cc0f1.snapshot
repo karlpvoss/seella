@@ -3,7 +3,7 @@ Session ID: 74ff67c0-397b-11ee-8ca4-9688db6cc0f1
 172.17.0.2      (anonymous) -> 172.17.0.2     
 Request Size:  84
 Response Size: 20
-QUERY Execute CQL3 query
+Execute CQL3 query
 "{'consistency_level': 'ONE', 'page_size': '100', 'query': 'INSERT INTO k.t (pk, t, v, s) VALUES (0, 1, ''val1'', ''static1'');', 'serial_consistency_level': 'SERIAL', 'user_timestamp': '1691891290172041'}"
 
    waterfall chart                                      dur    node                activity                                                                                 event id                              span id              parent span id       thread name
