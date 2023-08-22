@@ -11,9 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "{:15} ({}) -> {:15}",
         &s.client,
-        &s.username
-            .clone()
-            .unwrap_or_else(|| String::from("unknown user")),
+        &s.username.clone().unwrap_or_else(|| String::from("N/A")),
         &s.coordinator
     );
     println!(
