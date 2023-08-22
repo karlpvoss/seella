@@ -128,11 +128,6 @@ impl Event {
                 .expect(COMPLAIN_ABOUT_TRACE_SIZE),
         }
         .to_string();
-        let source = self.source.to_string();
-        let activity = &self.activity;
-        let event_id = self.id.to_string();
-        let span_id = self.span_id.to_string();
-        let parent_span_id = self.parent_span_id.to_string();
 
         // Activity tree
         let mut tree_bit = format!("{:│>t_depth$}", "├", t_depth = depth + 1);
@@ -145,12 +140,12 @@ impl Event {
             config,
             min_activity_width,
             &duration,
-            &source,
+            &self.source.to_string(),
             &tree,
-            activity,
-            &event_id,
-            &span_id,
-            &parent_span_id,
+            &self.activity,
+            &self.id.to_string(),
+            &self.span_id.to_string(),
+            &self.parent_span_id.to_string(),
             &self.thread,
         )
     }
@@ -253,7 +248,7 @@ pub fn event_display_str(
 }
 
 /// Wrapper type for the `i64` used by Scylla for span IDs.
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub struct SpanId(i64);
 
 impl SpanId {
