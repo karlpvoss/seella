@@ -6,36 +6,36 @@ use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
 pub struct SessionRecord {
-    pub(crate) session_id: Uuid,
-    pub(crate) client: IpAddr,
-    pub(crate) command: String,
-    pub(crate) coordinator: IpAddr,
-    pub(crate) duration: i32,
-    pub(crate) parameters: String,
-    pub(crate) request: String,
-    pub(crate) started_at: DateTime<FixedOffset>,
+    pub session_id: Uuid,
+    pub client: IpAddr,
+    pub command: String,
+    pub coordinator: IpAddr,
+    pub duration: i32,
+    pub parameters: String,
+    pub request: String,
+    pub started_at: DateTime<FixedOffset>,
 
     // The following are not present in Cassandra:
     #[serde(default)]
-    pub(crate) request_size: Option<u32>, // Strictly speaking, the int type in Scylla is signed, but it doesn't make sense for a size to be negative.
+    pub request_size: Option<u32>, // Strictly speaking, the int type in Scylla is signed, but it doesn't make sense for a size to be negative.
     #[serde(default)]
-    pub(crate) response_size: Option<u32>, // Strictly speaking, the int type in Scylla is signed, but it doesn't make sense for a size to be negative.
+    pub response_size: Option<u32>, // Strictly speaking, the int type in Scylla is signed, but it doesn't make sense for a size to be negative.
     #[serde(default)]
-    pub(crate) username: Option<String>,
+    pub username: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct EventRecord {
-    pub(crate) session_id: Uuid,
-    pub(crate) event_id: Uuid,
-    pub(crate) activity: String,
-    pub(crate) source: IpAddr,
-    pub(crate) source_elapsed: i32,
-    pub(crate) thread: String,
+    pub session_id: Uuid,
+    pub event_id: Uuid,
+    pub activity: String,
+    pub source: IpAddr,
+    pub source_elapsed: i32,
+    pub thread: String,
 
     // The following are not present in Cassandra:
     #[serde(default)]
-    pub(crate) scylla_parent_id: Option<SpanId>,
+    pub scylla_parent_id: Option<SpanId>,
     #[serde(default)]
-    pub(crate) scylla_span_id: Option<SpanId>,
+    pub scylla_span_id: Option<SpanId>,
 }

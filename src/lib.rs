@@ -17,7 +17,7 @@ pub use {
     session::Session,
 };
 
-pub(crate) const COMPLAIN_ABOUT_TRACE_SIZE: &str =
+pub const COMPLAIN_ABOUT_TRACE_SIZE: &str =
     "what are you doing with 2^63 microseconds in a single trace!";
 
 /// Constructs a Session instance from the files given in the [cli][Cli] config.
