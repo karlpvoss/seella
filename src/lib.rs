@@ -14,9 +14,11 @@ pub use {
     cli::Cli,
     data_source::DataSource,
     event::{event_display_str, Event, SpanId},
+    records::{EventRecord, SessionRecord},
     session::Session,
 };
 
+/// It's possible for a [chrono::Duration] to have more than 2^63 microseconds and overflow, we ignore that possibility.
 pub const COMPLAIN_ABOUT_TRACE_SIZE: &str =
     "what are you doing with 2^63 microseconds in a single trace!";
 

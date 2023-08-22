@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::net::IpAddr;
 use uuid::Uuid;
 
+/// The basic structure and data of a Session, before it is made into the head of a tree.
 #[derive(Debug, Deserialize)]
 pub struct SessionRecord {
     pub session_id: Uuid,
@@ -24,6 +25,7 @@ pub struct SessionRecord {
     pub username: Option<String>,
 }
 
+/// The basic structure and data of a Event, before it is made into the leaves of a tree.
 #[derive(Debug, Deserialize)]
 pub struct EventRecord {
     pub session_id: Uuid,
