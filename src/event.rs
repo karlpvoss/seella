@@ -6,14 +6,26 @@ use uuid::Uuid;
 /// All of the information related to an event, as well as all child events.
 #[derive(Debug)]
 pub struct Event {
+    /// The UUID of the Event
     pub id: Uuid,
+    /// The UUID of the Session
     pub session_id: Uuid,
-    pub span_id: SpanId,
-    pub parent_span_id: SpanId,
+    /// What is being done in this Event
     pub activity: String,
+    /// The source IP for this Event
     pub source: IpAddr,
+    /// Duration of this only this Event, not including child events
     pub duration: Duration,
+    /// The name of the thread from which this Event originated
     pub thread: String,
+
+    /// Unique identifier for this Event's span
+    /// Not present in Cassandra
+    pub span_id: SpanId,
+    /// Span ID for this Event's parent. Used to identity the tree structure
+    /// Not present in Cassandra
+    pub parent_span_id: SpanId,
+
     child_events: Vec<Event>,
 }
 
