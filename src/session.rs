@@ -44,14 +44,14 @@ pub struct Session {
     /// Size of the request
     /// Since Scylla 3.0
     /// Not present in Cassandra
-    pub request_size: i32,
+    pub request_size: Option<u32>,
     /// Size of the response
     /// Since Scylla 3.0
     /// Not present in Cassandra
-    pub response_size: i32,
+    pub response_size: Option<u32>,
     /// The username associated with the request? Lacking documentation.
     /// Not present in Cassandra
-    pub username: String,
+    pub username: Option<String>,
 
     root_events: Vec<Event>,
 }
@@ -82,15 +82,15 @@ impl Session {
         Self {
             id: session_record.session_id,
             client: session_record.client,
-            command: session_record.command(),
+            command: session_record.command,
             coordinator: session_record.coordinator,
             duration: Duration::microseconds(session_record.duration.into()),
-            parameters: session_record.parameters(),
-            request: session_record.request(),
+            parameters: session_record.parameters,
+            request: session_record.request,
             request_size: session_record.request_size,
             response_size: session_record.response_size,
             started_at: session_record.started_at,
-            username: session_record.username(),
+            username: session_record.username,
             root_events: root_events.into(),
         }
     }

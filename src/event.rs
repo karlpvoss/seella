@@ -1,5 +1,6 @@
 use crate::{cli::DurationFormat, records::EventRecord, Cli, COMPLAIN_ABOUT_TRACE_SIZE};
 use chrono::Duration;
+use serde::Deserialize;
 use std::{fmt::Display, net::IpAddr};
 use uuid::Uuid;
 
@@ -201,12 +202,13 @@ impl From<EventRecord> for Event {
         Self {
             id: value.event_id,
             session_id: value.session_id,
-            span_id: value.scylla_span_id.into(),
-            parent_span_id: value.scylla_parent_id.into(),
-            activity: value.activity(),
+            // Use of unwrap_or_default effectively makes Events with missing span ids root events, which is the Cassandra behaviour
+            span_id: value.scylla_span_id.unwrap_or_default(),
+            parent_span_id: value.scylla_parent_id.unwrap_or_default(),
+            activity: value.activity,
             source: value.source,
             duration: Duration::microseconds(value.source_elapsed.into()),
-            thread: value.thread(),
+            thread: value.thread,
             child_events: Vec::new(),
         }
     }
@@ -248,7 +250,7 @@ pub fn event_display_str(
 }
 
 /// Wrapper type for the `i64` used by Scylla for span IDs.
-#[derive(Debug, PartialEq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Clone, Copy, Default, Deserialize)]
 pub struct SpanId(i64);
 
 impl SpanId {

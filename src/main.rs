@@ -10,11 +10,25 @@ fn main() -> anyhow::Result<()> {
     println!("{}", &s.started_at.to_rfc3339());
     println!(
         "{:15} ({}) -> {:15}",
-        &s.client, &s.username, &s.coordinator
+        &s.client,
+        &s.username
+            .clone()
+            .unwrap_or_else(|| String::from("unknown user")),
+        &s.coordinator
     );
-    println!("Request Size:  {}", &s.request_size);
-    println!("Response Size: {}", &s.response_size);
-    println!("{} {}", &s.command, &s.request);
+    println!(
+        "Request Size:  {}",
+        &s.request_size
+            .map(|rs| rs.to_string())
+            .unwrap_or_else(|| String::from("N/A"))
+    );
+    println!(
+        "Response Size: {}",
+        &s.response_size
+            .map(|rs| rs.to_string())
+            .unwrap_or_else(|| String::from("N/A"))
+    );
+    println!("{}", &s.request);
     println!("{:?}", &s.parameters);
 
     // Calculations for the waterfall boxes

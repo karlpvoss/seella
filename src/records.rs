@@ -1,3 +1,4 @@
+use crate::SpanId;
 use chrono::{DateTime, FixedOffset};
 use serde::Deserialize;
 use std::net::IpAddr;
@@ -12,32 +13,15 @@ pub struct SessionRecord {
     pub(crate) duration: i32,
     pub(crate) parameters: String,
     pub(crate) request: String,
-    pub(crate) request_size: i32,
-    pub(crate) response_size: i32,
     pub(crate) started_at: DateTime<FixedOffset>,
-    pub(crate) username: String,
-}
 
-impl SessionRecord {
-    pub fn id(&self) -> Uuid {
-        self.session_id
-    }
-
-    pub fn command(&self) -> String {
-        self.command.clone()
-    }
-
-    pub fn parameters(&self) -> String {
-        self.parameters.clone()
-    }
-
-    pub fn request(&self) -> String {
-        self.request.clone()
-    }
-
-    pub fn username(&self) -> String {
-        self.username.clone()
-    }
+    // The following are not present in Cassandra:
+    #[serde(default)]
+    pub(crate) request_size: Option<u32>, // Strictly speaking, the int type in Scylla is signed, but it doesn't make sense for a size to be negative.
+    #[serde(default)]
+    pub(crate) response_size: Option<u32>, // Strictly speaking, the int type in Scylla is signed, but it doesn't make sense for a size to be negative.
+    #[serde(default)]
+    pub(crate) username: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -45,27 +29,13 @@ pub struct EventRecord {
     pub(crate) session_id: Uuid,
     pub(crate) event_id: Uuid,
     pub(crate) activity: String,
-    pub(crate) scylla_parent_id: i64,
-    pub(crate) scylla_span_id: i64,
     pub(crate) source: IpAddr,
     pub(crate) source_elapsed: i32,
     pub(crate) thread: String,
-}
 
-impl EventRecord {
-    pub fn id(&self) -> Uuid {
-        self.event_id
-    }
-
-    pub fn session_id(&self) -> Uuid {
-        self.session_id
-    }
-
-    pub fn activity(&self) -> String {
-        self.activity.clone()
-    }
-
-    pub fn thread(&self) -> String {
-        self.thread.clone()
-    }
+    // The following are not present in Cassandra:
+    #[serde(default)]
+    pub(crate) scylla_parent_id: Option<SpanId>,
+    #[serde(default)]
+    pub(crate) scylla_span_id: Option<SpanId>,
 }

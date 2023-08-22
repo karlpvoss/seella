@@ -34,7 +34,7 @@ pub fn session_from_config(cli: &Cli) -> anyhow::Result<Session> {
                 .map_err(|err| session_deserialization_errors.push(err))
                 .ok()
         })
-        .find(|record| record.id() == session_id)
+        .find(|record| record.session_id == session_id)
         .ok_or(anyhow!(
             "could not find the session with id: {}",
             session_id
@@ -59,7 +59,7 @@ pub fn session_from_config(cli: &Cli) -> anyhow::Result<Session> {
                     .map_err(|err| event_deserialization_errors.push(err))
                     .ok()
             })
-            .filter(|record| record.session_id() == session_id)
+            .filter(|record| record.session_id == session_id)
             .collect();
 
     if !event_deserialization_errors.is_empty() {
