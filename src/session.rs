@@ -23,17 +23,36 @@ use uuid::Uuid;
 /// i.e. we provide the children of the first root trace before moving on to the second root trace.
 #[derive(Debug)]
 pub struct Session {
+    /// The UUID of the Session
     pub id: Uuid,
+    /// The IP address of the connecting client
     pub client: IpAddr,
+    /// Currently, this can only be "QUERY"
     pub command: String,
+    /// The IP address of the coordinating Scylla Node
     pub coordinator: IpAddr,
+    /// Total duration of the Session
     pub duration: Duration,
+    /// A scylla map containing string pairs that describe the query
+    // Not currently parsing as a HashMap<String, String> due to issues with quoting
     pub parameters: String,
+    /// A short string decribing the Session. Is _not_ the CQL query being ran; that is in `parameters`.
     pub request: String,
-    pub request_size: i32,
-    pub response_size: i32,
+    /// DateTime of the start of this tracing session
     pub started_at: DateTime<FixedOffset>,
+
+    /// Size of the request
+    /// Since Scylla 3.0
+    /// Not present in Cassandra
+    pub request_size: i32,
+    /// Size of the response
+    /// Since Scylla 3.0
+    /// Not present in Cassandra
+    pub response_size: i32,
+    /// The username associated with the request? Lacking documentation.
+    /// Not present in Cassandra
     pub username: String,
+
     root_events: Vec<Event>,
 }
 
