@@ -23,17 +23,36 @@ use uuid::Uuid;
 /// i.e. we provide the children of the first root trace before moving on to the second root trace.
 #[derive(Debug)]
 pub struct Session {
+    /// The UUID of the Session
     pub id: Uuid,
+    /// The IP address of the connecting client
     pub client: IpAddr,
+    /// Currently, this can only be "QUERY"
     pub command: String,
+    /// The IP address of the coordinating Scylla Node
     pub coordinator: IpAddr,
+    /// Total duration of the Session
     pub duration: Duration,
+    /// A scylla map containing string pairs that describe the query
+    // Not currently parsing as a HashMap<String, String> due to issues with quoting
     pub parameters: String,
+    /// A short string decribing the Session. Is _not_ the CQL query being ran; that is in `parameters`.
     pub request: String,
-    pub request_size: i32,
-    pub response_size: i32,
+    /// DateTime of the start of this tracing session
     pub started_at: DateTime<FixedOffset>,
-    pub username: String,
+
+    /// Size of the request
+    /// Since Scylla 3.0
+    /// Not present in Cassandra
+    pub request_size: Option<u32>,
+    /// Size of the response
+    /// Since Scylla 3.0
+    /// Not present in Cassandra
+    pub response_size: Option<u32>,
+    /// The username associated with the request? Lacking documentation.
+    /// Not present in Cassandra
+    pub username: Option<String>,
+
     root_events: Vec<Event>,
 }
 
@@ -63,15 +82,15 @@ impl Session {
         Self {
             id: session_record.session_id,
             client: session_record.client,
-            command: session_record.command(),
+            command: session_record.command,
             coordinator: session_record.coordinator,
             duration: Duration::microseconds(session_record.duration.into()),
-            parameters: session_record.parameters(),
-            request: session_record.request(),
+            parameters: session_record.parameters,
+            request: session_record.request,
             request_size: session_record.request_size,
             response_size: session_record.response_size,
             started_at: session_record.started_at,
-            username: session_record.username(),
+            username: session_record.username,
             root_events: root_events.into(),
         }
     }
