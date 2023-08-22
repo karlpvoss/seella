@@ -5,6 +5,7 @@ use thiserror::Error;
 use uuid::Uuid;
 
 /// A source for the data based on an exported CSV.
+#[derive(Debug)]
 pub struct CsvSource<'a> {
     sessions: &'a PathBuf,
     events: &'a PathBuf,
