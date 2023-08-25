@@ -123,32 +123,35 @@ impl Session {
         self.root_events.iter().map(|e| e.durations().0).sum()
     }
 
-    pub fn display(&self, cli: Cli) {
+    pub fn display(&self, cli: Cli, w: &mut dyn std::io::Write) -> std::io::Result<()> {
         // Print out the session info
-        println!("Session ID: {}", &self.id);
-        println!("{}", &self.started_at.to_rfc3339());
-        println!(
+        writeln!(w, "Session ID: {}", &self.id)?;
+        writeln!(w, "{}", &self.started_at.to_rfc3339())?;
+        writeln!(
+            w,
             "{:15} ({}) -> {:15}",
             &self.client,
             &self.username.clone().unwrap_or_else(|| String::from("N/A")),
             &self.coordinator
-        );
-        println!(
+        )?;
+        writeln!(
+            w,
             "Request Size:  {}",
             &self
                 .request_size
                 .map(|rs| rs.to_string())
                 .unwrap_or_else(|| String::from("N/A"))
-        );
-        println!(
+        )?;
+        writeln!(
+            w,
             "Response Size: {}",
             &self
                 .response_size
                 .map(|rs| rs.to_string())
                 .unwrap_or_else(|| String::from("N/A"))
-        );
-        println!("{}", &self.request);
-        println!("{:?}", &self.parameters);
+        )?;
+        writeln!(w, "{}", &self.request)?;
+        writeln!(w, "{:?}", &self.parameters)?;
 
         // Calculations for the waterfall boxes
         let s_end = self.total_duration();
@@ -164,8 +167,9 @@ impl Session {
         let i_max_width = self.event_count().to_string().len();
 
         // Headers
-        println!();
-        println!(
+        writeln!(w, "")?;
+        writeln!(
+            w,
             "{:i_max_width$} {:w_width$} {}",
             "",
             "waterfall chart",
@@ -182,18 +186,21 @@ impl Session {
                 "thread name",
             ),
             w_width = cli.waterfall_width + 2
-        );
+        )?;
 
         for (i, (e, depth)) in events.iter().enumerate() {
-            println!(
+            writeln!(
+                w,
                 "{:i_max_width$} {} {}",
                 i + 1,
                 e.waterfall(&cli, offset, s_end),
                 e.display(&cli, a_max_width, *depth, max_depth)
-            );
+            )?;
 
             // Move the offset up for the next event
             offset += e.durations().1;
         }
+
+        Ok(())
     }
 }

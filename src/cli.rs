@@ -50,3 +50,21 @@ pub enum DurationFormat {
     Millis,
     Micros,
 }
+
+// Ensure that this aligns with the above.
+impl Default for Cli {
+    fn default() -> Self {
+        Self {
+            session_id: String::new(),
+            sessions_path: PathBuf::from("sessions.csv"),
+            events_path: PathBuf::from("events.csv"),
+            waterfall_width: 100,
+            duration_format: DurationFormat::Micros,
+            min_duration_width: 6,
+            max_activity_width: 300,
+            show_event_id: false,
+            show_span_ids: false,
+            show_thread: false,
+        }
+    }
+}
