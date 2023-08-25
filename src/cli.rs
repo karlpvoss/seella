@@ -9,27 +9,27 @@ pub struct Cli {
     pub session_id: String,
 
     /// Path to the CSV containing the sessions data. Any string that can be coerced into a PathBuf
-    #[arg(short, long, default_value = "sessions.csv")]
+    #[arg(short, long, default_value_os_t)]
     pub sessions_path: PathBuf,
 
     /// Path to the CSV containing the events data. Any string that can be coerced into a PathBuf
-    #[arg(short, long, default_value = "events.csv")]
+    #[arg(short, long, default_value_os_t)]
     pub events_path: PathBuf,
 
     /// The width of the waterfall chart
-    #[arg(short, long, default_value_t = 100)]
+    #[arg(short, long, default_value_t)]
     pub waterfall_width: usize,
 
     /// Whether to generate span durations in milliseconds or microseconds
-    #[arg(value_enum, short, long, default_value_t = DurationFormat::Micros)]
+    #[arg(value_enum, short, long, default_value_t)]
     pub duration_format: DurationFormat,
 
     /// Minimum print width for the duration field, remaining will be filled with spaces
-    #[arg(long, default_value_t = 6)]
+    #[arg(long, default_value_t)]
     pub min_duration_width: usize,
 
     /// Maximum print width for the activity field, remaining will be truncated
-    #[arg(long, default_value_t = 300)]
+    #[arg(long, default_value_t)]
     pub max_activity_width: usize,
 
     /// Whether to show the event uuid
@@ -45,14 +45,6 @@ pub struct Cli {
     pub show_thread: bool,
 }
 
-/// Which unit of measurement to use for the display of durations of spans.
-#[derive(Debug, Clone, ValueEnum)]
-pub enum DurationFormat {
-    Millis,
-    Micros,
-}
-
-// Ensure that this aligns with the above.
 impl Default for Cli {
     fn default() -> Self {
         Self {
@@ -68,4 +60,12 @@ impl Default for Cli {
             show_thread: false,
         }
     }
+}
+
+/// Which unit of measurement to use for the display of durations of spans.
+#[derive(Debug, Default, Clone, ValueEnum)]
+pub enum DurationFormat {
+    Millis,
+    #[default]
+    Micros,
 }
