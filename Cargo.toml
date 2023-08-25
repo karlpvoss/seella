@@ -1,7 +1,7 @@
 [package]
 name = "seella"
 description = "A tool for visualising the traces emitted by ScyllaDB"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Karl Voss <karl.p.voss@gmail.com>"]
 repository = "https://github.com/karlpvoss/seella"
