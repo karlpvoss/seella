@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 pub use {
     crate::csv::{CsvParsingError, CsvSource},
-    cli::Cli,
+    cli::{Cli, DurationFormat},
     data_source::DataSource,
     event::{event_display_str, Event, SpanId},
     records::{EventRecord, SessionRecord},
