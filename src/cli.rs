@@ -45,6 +45,7 @@ pub struct Cli {
     pub show_thread: bool,
 }
 
+/// Which unit of measurement to use for the display of durations of spans.
 #[derive(Debug, Clone, ValueEnum)]
 pub enum DurationFormat {
     Millis,
