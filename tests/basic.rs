@@ -1,15 +1,15 @@
 mod util;
 
 use seella::{session_from_config, Cli};
-use util::{test_data_events, test_data_sessions};
+use util::test_data;
 
 #[test]
 fn basic_functionality() -> Result<(), Box<dyn std::error::Error>> {
     let mut output = Vec::new();
     let cli: Cli = Cli {
         session_id: String::from("74ff67c0-397b-11ee-8ca4-9688db6cc0f1"),
-        sessions_path: test_data_sessions(),
-        events_path: test_data_events(),
+        sessions_path: test_data("sessions.csv"),
+        events_path: test_data("events.csv"),
         ..Default::default()
     };
     let session = session_from_config(&cli)?;
@@ -48,8 +48,8 @@ fn more_functionality() -> Result<(), Box<dyn std::error::Error>> {
     let mut output = Vec::new();
     let cli: Cli = Cli {
         session_id: String::from("74ff67c0-397b-11ee-8ca4-9688db6cc0f1"),
-        sessions_path: test_data_sessions(),
-        events_path: test_data_events(),
+        sessions_path: test_data("sessions.csv"),
+        events_path: test_data("events.csv"),
         waterfall_width: 50,
         show_event_id: true,
         show_span_ids: true,
