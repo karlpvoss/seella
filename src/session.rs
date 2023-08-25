@@ -167,7 +167,7 @@ impl Session {
         let i_max_width = self.event_count().to_string().len();
 
         // Headers
-        writeln!(w, "")?;
+        writeln!(w)?;
         writeln!(
             w,
             "{:i_max_width$} {:w_width$} {}",
