@@ -5,7 +5,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     let s = session_from_config(&cli)?;
 
-    s.display(cli);
+    s.display(cli, &mut std::io::stdout())?;
 
     Ok(())
 }
