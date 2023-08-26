@@ -74,18 +74,20 @@ impl Event {
         let e_tail = offset + total_dur;
 
         // Calculate positions as a factor of the waterfall width
-        let e_start_pos = (e_start as f64 * config.waterfall_width as f64 / session_duration as f64)
+        let e_start_pos = (e_start as f64 * *config.waterfall_width as f64
+            / session_duration as f64)
             .floor() as usize;
-        let e_end_pos = ((e_end as f64 * config.waterfall_width as f64 / session_duration as f64)
+        let e_end_pos = ((e_end as f64 * *config.waterfall_width as f64 / session_duration as f64)
             .floor() as usize)
             .max(e_start_pos + 1);
-        let e_tail_pos = ((e_tail as f64 * config.waterfall_width as f64 / session_duration as f64)
-            .floor() as usize)
-            .max(e_start_pos + 1);
+        let e_tail_pos =
+            ((e_tail as f64 * *config.waterfall_width as f64 / session_duration as f64).floor()
+                as usize)
+                .max(e_start_pos + 1);
 
         let block_width = e_end_pos - e_start_pos;
         let tail_width = e_tail_pos - e_end_pos;
-        let rem_width = config.waterfall_width - e_start_pos - block_width - tail_width;
+        let rem_width = *config.waterfall_width - e_start_pos - block_width - tail_width;
 
         let tail = match tail_width {
             0 => "",
@@ -230,9 +232,9 @@ pub fn event_display_str(
     parent_span_id: &str,
     thread: &str,
 ) -> String {
-    let d_min = config.min_duration_width;
-    let a_min = min_activity_width.min(config.max_activity_width);
-    let a_max = config.max_activity_width;
+    let d_min = *config.min_duration_width;
+    let a_min = min_activity_width.min(*config.max_activity_width);
+    let a_max = *config.max_activity_width;
 
     let mut output = format!("{duration:d_min$} {source:15} {tree} {activity:a_min$.a_max$}");
 

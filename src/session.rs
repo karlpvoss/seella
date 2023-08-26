@@ -185,7 +185,7 @@ impl Session {
                 "parent span id",
                 "thread name",
             ),
-            w_width = cli.waterfall_width + 2
+            w_width = *cli.waterfall_width + 2
         )?;
 
         for (i, (e, depth)) in events.iter().enumerate() {
