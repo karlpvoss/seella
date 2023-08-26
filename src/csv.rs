@@ -37,11 +37,12 @@ pub enum CsvParsingError {
 
 impl<'a> DataSource for CsvSource<'a> {
     type Error = CsvParsingError;
+    type P = String;
 
-    fn get_data(&self) -> Result<(SessionRecord, Vec<EventRecord>), Self::Error> {
+    fn get_data(&self) -> Result<(SessionRecord<Self::P>, Vec<EventRecord>), Self::Error> {
         let mut session_deserialization_errors = Vec::new();
         let session_record = csv::Reader::from_reader(BufReader::new(File::open(self.sessions)?))
-            .deserialize::<SessionRecord>()
+            .deserialize::<SessionRecord<String>>()
             .filter_map(|record_res| {
                 record_res
                     .map_err(|err| session_deserialization_errors.push(err))

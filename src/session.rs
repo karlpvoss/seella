@@ -3,8 +3,8 @@ use crate::{
     records::{EventRecord, SessionRecord},
     Cli,
 };
-use chrono::{DateTime, Duration, FixedOffset};
-use std::{collections::VecDeque, net::IpAddr};
+use chrono::{DateTime, Duration, Utc};
+use std::{collections::VecDeque, fmt::Debug, net::IpAddr};
 use uuid::Uuid;
 
 /// All of the information related to a single tracing session.
@@ -23,7 +23,7 @@ use uuid::Uuid;
 /// [Events][Event] can be accessed through the [Session::events()] method, and these will be presented depth-first;
 /// i.e. we provide the children of the first root trace before moving on to the second root trace.
 #[derive(Debug)]
-pub struct Session {
+pub struct Session<P> {
     /// The UUID of the Session
     pub id: Uuid,
     /// The IP address of the connecting client
@@ -34,13 +34,14 @@ pub struct Session {
     pub coordinator: IpAddr,
     /// Total duration of the Session
     pub duration: Duration,
+    // TODO FIX DOCS
     /// A scylla map containing string pairs that describe the query
     // Not currently parsing as a HashMap<String, String> due to issues with quoting
-    pub parameters: String,
+    pub parameters: P,
     /// A short string decribing the Session. Is _not_ the CQL query being ran; that is in `parameters`.
     pub request: String,
     /// DateTime of the start of this tracing session
-    pub started_at: DateTime<FixedOffset>,
+    pub started_at: DateTime<Utc>,
 
     /// Size of the request
     /// Since Scylla 3.0
@@ -57,8 +58,11 @@ pub struct Session {
     root_events: Vec<Event>,
 }
 
-impl Session {
-    pub(crate) fn new(session_record: SessionRecord, event_records: Vec<EventRecord>) -> Self {
+impl<P> Session<P>
+where
+    P: Debug,
+{
+    pub(crate) fn new(session_record: SessionRecord<P>, event_records: Vec<EventRecord>) -> Self {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
             .map(Event::from)

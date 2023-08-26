@@ -1,20 +1,20 @@
 use crate::SpanId;
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use std::net::IpAddr;
+use std::{fmt::Debug, net::IpAddr};
 use uuid::Uuid;
 
 /// The basic structure and data of a Session, before it is made into the head of a tree.
 #[derive(Debug, Deserialize)]
-pub struct SessionRecord {
+pub struct SessionRecord<P> {
     pub session_id: Uuid,
     pub client: IpAddr,
     pub command: String,
     pub coordinator: IpAddr,
     pub duration: i32,
-    pub parameters: String,
+    pub parameters: P,
     pub request: String,
-    pub started_at: DateTime<FixedOffset>,
+    pub started_at: DateTime<Utc>,
 
     // The following are not present in Cassandra:
     #[serde(default)]
