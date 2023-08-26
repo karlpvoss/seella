@@ -55,7 +55,7 @@ pub struct Cli {
 pub enum OperationMode {
     /// Use a pair of CSVs as a data source
     Csv(CsvModeOptions),
-    /// Use a live database (Scylla or Cassandra) as a data source.
+    /// Use a live database as a data source.
     Db,
 }
 

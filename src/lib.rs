@@ -3,6 +3,7 @@
 mod cli;
 mod csv;
 mod data_source;
+mod db;
 mod event;
 mod records;
 mod session;

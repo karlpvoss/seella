@@ -19,3 +19,5 @@ clap = { version = "4.3", features = ["derive"] }
 csv = "1.2"
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "1.0.47"
+scylla = "0.9.0"
+futures = { version = "0.3.28", features = ["executor"] }
