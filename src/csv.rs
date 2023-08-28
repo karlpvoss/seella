@@ -1,4 +1,4 @@
-use crate::data_source::DataSource;
+use crate::data_source::{DataSource, DataSourceResult};
 use crate::records::{EventRecord, SessionRecord};
 use std::{fs::File, io::BufReader, path::PathBuf};
 use thiserror::Error;
@@ -39,7 +39,7 @@ impl<'a> DataSource for CsvSource<'a> {
     type Error = CsvParsingError;
     type P = String;
 
-    fn get_data(&self) -> Result<(SessionRecord<Self::P>, Vec<EventRecord>), Self::Error> {
+    fn get_data(&self) -> DataSourceResult<Self::P, Self::Error> {
         let mut session_deserialization_errors = Vec::new();
         let session_record = csv::Reader::from_reader(BufReader::new(File::open(self.sessions)?))
             .deserialize::<SessionRecord<String>>()

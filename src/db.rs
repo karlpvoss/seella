@@ -1,10 +1,13 @@
-use crate::{data_source::DataSource, records::{EventRecord, SessionRecord}, SpanId};
+use crate::{data_source::{DataSource, DataSourceResult}, records::{EventRecord, SessionRecord}, SpanId};
 use chrono::{TimeZone, Utc, LocalResult};
 use futures::executor::block_on;
 use scylla::FromRow;
 use std::{collections::HashMap, net::IpAddr, net::SocketAddr, str::FromStr};
 use thiserror::Error;
 use uuid::Uuid;
+
+pub type DbSessionRecord = (String, IpAddr, String, IpAddr, i32, HashMap<String, String>, String, i64, i32, i32, String);
+pub type DbEventRecord = (String, String, String, IpAddr, i32, String, i64, i64);
 
 /// A source for the data based on an exported CSV.
 #[derive(Debug)]
@@ -42,15 +45,16 @@ pub enum DbParsingError {
 impl<'a> DataSource for DbSource<'a> {
     type Error = DbParsingError;
     type P = HashMap<String, String>;
-
-    fn get_data(&self) -> Result<(SessionRecord<Self::P>, Vec<EventRecord>), Self::Error> {
+    
+    #[allow(clippy::type_complexity)] 
+    fn get_data(&self) -> DataSourceResult<Self::P, Self::Error> {
         block_on(async {
             let conn = scylla::SessionBuilder::new()
                 .known_node_addr(self.addr)
                 .build()
                 .await?;
 
-            let (session_id, client, command, coordinator, duration, parameters, request, started_at, request_size, response_size, username): (String, IpAddr, String, IpAddr, i32, HashMap<String, String>, String, i64, i32, i32, String) = 
+            let (session_id, client, command, coordinator, duration, parameters, request, started_at, request_size, response_size, username): DbSessionRecord = 
                 <_>::from_row(conn.query(
                     "SELECT session_id, client, command, coordinator, duration, parameters, request, started_at, request_size, response_size, username FROM system_traces.sessions WHERE session_id=?", 
                     (self.session_id.to_string(),)).await?.first_row()?)?;
@@ -80,8 +84,8 @@ impl<'a> DataSource for DbSource<'a> {
 
             let mut event_records = vec![];
             for row in rows {
-                let (session_id, event_id, activity, source, source_elapsed, thread, scylla_parent_id, scylla_span_id) = 
-                <(String, String, String, IpAddr, i32, String, i64, i64)>::from_row(row)?;
+                let (session_id, event_id, activity, source, source_elapsed, thread, scylla_parent_id, scylla_span_id): DbEventRecord = 
+                <_>::from_row(row)?;
                 event_records.push(EventRecord {
                     session_id: Uuid::from_str(&session_id)?,
                     event_id: Uuid::from_str(&event_id)?,
