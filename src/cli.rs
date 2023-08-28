@@ -1,6 +1,7 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::{
-    ffi::OsString, fmt::Display, num::ParseIntError, ops::Deref, path::PathBuf, str::FromStr,
+    ffi::OsString, fmt::Display, net::{SocketAddr, AddrParseError, SocketAddrV4, Ipv4Addr}, num::ParseIntError, ops::Deref, path::PathBuf,
+    str::FromStr,
 };
 
 //   ___ _    ___
@@ -56,7 +57,7 @@ pub enum OperationMode {
     /// Use a pair of CSVs as a data source
     Csv(CsvModeOptions),
     /// Use a live database as a data source.
-    Db,
+    Db(DbModeOptions),
 }
 
 impl Default for OperationMode {
@@ -83,6 +84,19 @@ pub struct CsvModeOptions {
     /// Path to the CSV containing the events data. Any string that can be coerced into a PathBuf
     #[arg(short, long, default_value_t)]
     pub events_path: EventsPath,
+}
+
+//  ___  ___   __  __  ___  ___  ___
+// |   \| _ ) |  \/  |/ _ \|   \| __|
+// | |) | _ \ | |\/| | (_) | |) | _|
+// |___/|___/ |_|  |_|\___/|___/|___|
+
+#[derive(Debug, Args, Clone, Default)]
+pub struct DbModeOptions {
+    pub session_id: String,
+
+    #[arg(short, long, default_value_t)]
+    pub addr: DbAddr,
 }
 
 //  ___ ___ ___ ___ ___ ___  _  _ ___   ___  _ _____ _  _
@@ -283,6 +297,42 @@ impl FromStr for MaxActivityWidth {
 
 impl Deref for MaxActivityWidth {
     type Target = usize;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// ___  ___     _   ___  ___  ___ 
+// |   \| _ )   /_\ |   \|   \| _ \
+// | |) | _ \  / _ \| |) | |) |   /
+// |___/|___/ /_/ \_\___/|___/|_|_\
+
+#[derive(Debug, Clone)]
+pub struct DbAddr(pub SocketAddr);
+
+impl Default for DbAddr {
+    fn default() -> Self {
+        Self(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 9042)))
+    }
+}
+
+impl Display for DbAddr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl FromStr for DbAddr {
+    type Err = AddrParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(SocketAddr::from_str(s)?))
+    }
+}
+
+impl Deref for DbAddr {
+    type Target = SocketAddr;
 
     fn deref(&self) -> &Self::Target {
         &self.0

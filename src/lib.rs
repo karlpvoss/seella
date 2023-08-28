@@ -9,7 +9,7 @@ mod records;
 mod session;
 
 use db::DbSource;
-use std::{collections::HashMap, net::SocketAddr, path::PathBuf};
+use std::{net::SocketAddr, path::PathBuf};
 use uuid::Uuid;
 
 pub use {
@@ -36,7 +36,7 @@ pub fn session_from_csv(
     sessions_path: &PathBuf,
     events_path: &PathBuf,
     session_id: &str,
-) -> Result<Session<String>, Box<dyn std::error::Error>> {
+) -> Result<Session, Box<dyn std::error::Error>> {
     let session_id = Uuid::try_parse(session_id)?;
     let (session_record, event_records) =
         CsvSource::new(sessions_path, events_path, session_id).get_data()?;
@@ -47,7 +47,7 @@ pub fn session_from_csv(
 pub fn session_from_db(
     addr: SocketAddr,
     session_id: &str,
-) -> Result<Session<HashMap<String, String>>, Box<dyn std::error::Error>> {
+) -> Result<Session, Box<dyn std::error::Error>> {
     let (session_record, event_records) = DbSource::new(addr, session_id).get_data()?;
     Ok(Session::new(session_record, event_records))
 }

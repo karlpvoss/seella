@@ -44,10 +44,8 @@ pub enum DbParsingError {
 
 impl<'a> DataSource for DbSource<'a> {
     type Error = DbParsingError;
-    type P = HashMap<String, String>;
     
-    #[allow(clippy::type_complexity)] 
-    fn get_data(&self) -> DataSourceResult<Self::P, Self::Error> {
+    fn get_data(&self) -> DataSourceResult<Self::Error> {
         block_on(async {
             let conn = scylla::SessionBuilder::new()
                 .known_node_addr(self.addr)
@@ -70,7 +68,7 @@ impl<'a> DataSource for DbSource<'a> {
                 command,
                 coordinator,
                 duration,
-                parameters,
+                parameters: format!("{:?}", parameters),
                 request,
                 started_at,
                 request_size: Some(request_size as u32),

@@ -6,13 +6,13 @@ use uuid::Uuid;
 
 /// The basic structure and data of a Session, before it is made into the head of a tree.
 #[derive(Debug, Deserialize)]
-pub struct SessionRecord<P> {
+pub struct SessionRecord {
     pub session_id: Uuid,
     pub client: IpAddr,
     pub command: String,
     pub coordinator: IpAddr,
     pub duration: i32,
-    pub parameters: P,
+    pub parameters: String,
     pub request: String,
     pub started_at: DateTime<Utc>,
 

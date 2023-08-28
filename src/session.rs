@@ -23,7 +23,7 @@ use uuid::Uuid;
 /// [Events][Event] can be accessed through the [Session::events()] method, and these will be presented depth-first;
 /// i.e. we provide the children of the first root trace before moving on to the second root trace.
 #[derive(Debug)]
-pub struct Session<P> {
+pub struct Session {
     /// The UUID of the Session
     pub id: Uuid,
     /// The IP address of the connecting client
@@ -37,7 +37,7 @@ pub struct Session<P> {
     // TODO FIX DOCS
     /// A scylla map containing string pairs that describe the query
     // Not currently parsing as a HashMap<String, String> due to issues with quoting
-    pub parameters: P,
+    pub parameters: String,
     /// A short string decribing the Session. Is _not_ the CQL query being ran; that is in `parameters`.
     pub request: String,
     /// DateTime of the start of this tracing session
@@ -58,11 +58,9 @@ pub struct Session<P> {
     root_events: Vec<Event>,
 }
 
-impl<P> Session<P>
-where
-    P: Debug,
+impl Session
 {
-    pub(crate) fn new(session_record: SessionRecord<P>, event_records: Vec<EventRecord>) -> Self {
+    pub(crate) fn new(session_record: SessionRecord, event_records: Vec<EventRecord>) -> Self {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
             .map(Event::from)
