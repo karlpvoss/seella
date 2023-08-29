@@ -18,7 +18,6 @@ pub use {
         Cli, CsvModeOptions, DurationFormat, EventsPath, MaxActivityWidth, MinDurationWidth,
         OperationMode, SessionsPath, WaterfallWidth,
     },
-    data_source::DataSource,
     event::{event_display_str, Event, SpanId},
     records::{EventRecord, SessionRecord},
     session::Session,
@@ -44,10 +43,10 @@ pub fn session_from_csv(
     Ok(Session::new(session_record, event_records))
 }
 
-pub fn session_from_db(
+pub async fn session_from_db(
     addr: SocketAddr,
     session_id: &str,
 ) -> Result<Session, Box<dyn std::error::Error>> {
-    let (session_record, event_records) = DbSource::new(addr, session_id).get_data()?;
+    let (session_record, event_records) = DbSource::new(addr, session_id).get_data().await?;
     Ok(Session::new(session_record, event_records))
 }

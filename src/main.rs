@@ -1,7 +1,8 @@
 use clap::Parser;
 use seella::{session_from_csv, Cli, OperationMode, session_from_db};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     let s = match cli.mode {
@@ -11,7 +12,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &options.session_id,
         )?,
         OperationMode::Db(ref options) => {
-            session_from_db(*options.addr, &options.session_id)?
+            session_from_db(*options.addr, &options.session_id).await?
         }
     };
 
