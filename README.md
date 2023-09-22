@@ -122,14 +122,11 @@ CREATE TABLE k.t (
     pk int,
     t int,
     v text,
-    s text static,
+    s text,
     PRIMARY KEY (pk, t)
 );
 
 INSERT INTO k.t (pk, t, v, s) VALUES (0, 0, 'val0', 'static0');
-INSERT INTO k.t (pk, t, v, s) VALUES (0, 1, 'val1', 'static1');
-
-SELECT * FROM k.t;
 
 COPY system_traces.sessions TO '/data/sessions.csv' WITH HEADER = TRUE;
 COPY system_traces.events TO '/data/events.csv' WITH HEADER = TRUE;
