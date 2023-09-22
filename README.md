@@ -118,10 +118,10 @@ Use a live database as a data source
 Usage: seella db [OPTIONS] <SESSION_ID>
 
 Arguments:
-  <SESSION_ID>  
+  <SESSION_ID>  The session id to be visualised
 
 Options:
-  -a, --addr <ADDR>  [default: 127.0.0.1:9042]
+  -a, --addr <ADDR>  Socket Address (IP address and port) for the database connection. See [std::net::SocketAddr::from_str] [default: 127.0.0.1:9042]
   -h, --help         Print help
 ```
 
