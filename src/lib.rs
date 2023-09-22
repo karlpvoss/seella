@@ -8,26 +8,16 @@ mod event;
 mod records;
 mod session;
 
-use db::DbSource;
 use std::{net::SocketAddr, path::PathBuf};
 use uuid::Uuid;
 
-pub use {
-    crate::csv::{CsvParsingError, CsvSource},
-    cli::{
-        Cli, CsvModeOptions, DurationFormat, EventsPath, MaxActivityWidth, MinDurationWidth,
-        OperationMode, SessionsPath, WaterfallWidth,
-    },
-    event::{event_display_str, Event, SpanId},
-    records::{EventRecord, SessionRecord},
-    session::Session,
-};
+pub use {crate::csv::*, cli::*, db::*, event::*, records::*, session::*};
 
 /// It's possible for a [chrono::Duration] to have more than 2^63 microseconds and overflow, we ignore that possibility.
 pub const COMPLAIN_ABOUT_TRACE_SIZE: &str =
     "what are you doing with 2^63 microseconds in a single trace!";
 
-/// Constructs a Session instance from the files given in the [cli][Cli] config.
+/// Constructs a [Session] instance from the files given in the [CsvModeOptions] config.
 ///
 /// This [Session] instance contains all of the information available from the `session.csv` file, as well as all
 /// of the information for the [events][Event] relating to that session from the `events.csv` file.
@@ -43,6 +33,10 @@ pub fn session_from_csv(
     Ok(Session::new(session_record, event_records))
 }
 
+/// Constructs a [Session] instance from a live database, given the [DbModeOptions] config.
+///
+/// This [Session] instance contains all of the information available from the `system_traces.sessions` table, as well
+/// as all of the information for the [events][Event] relating to that session from the `system_traces.events` table.
 pub async fn session_from_db(
     addr: SocketAddr,
     session_id: &str,

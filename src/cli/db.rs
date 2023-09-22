@@ -6,14 +6,20 @@ use std::{
     str::FromStr,
 };
 
+/// Options that are specific to the DB mode of operation.
 #[derive(Debug, Args, Clone, Default)]
 pub struct DbModeOptions {
+    /// The session id to be visualised.
     pub session_id: String,
 
+    /// Socket Address (IP address and port) for the database connection. See [std::net::SocketAddr::from_str].
     #[arg(short, long, default_value_t)]
     pub addr: DbAddr,
 }
 
+/// Default SocketAddr for connection to a database.
+///
+/// Type to provide a correct `Default::default()` SocketAddr for clap.
 #[derive(Debug, Clone)]
 pub struct DbAddr(pub SocketAddr);
 
