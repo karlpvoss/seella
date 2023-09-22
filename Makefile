@@ -1,3 +1,7 @@
+.PHONY: readme
+readme:
+	./README.sh > README.md
+
 .PHONY: watch
 watch:
 	cargo watch -x check -x clippy
