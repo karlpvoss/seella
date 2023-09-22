@@ -49,7 +49,7 @@ pub enum DbParsingError {
     #[error("the request resulted in a error: {0}")]
     ScyllaQueryError(#[from] scylla::transport::errors::QueryError),
     #[error("we didn't get any results back from the db: {0}")]
-    FisrtRowError(#[from] scylla::transport::query_result::FirstRowError),
+    FirstRowError(#[from] scylla::transport::query_result::FirstRowError),
     #[error("we didn't get any results back from the db: {0}")]
     RowsExpectedError(#[from] scylla::transport::query_result::RowsExpectedError),
     #[error("there was an issue parsing the data from the returned row: {0}")]
