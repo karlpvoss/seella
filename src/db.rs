@@ -8,6 +8,7 @@ use std::{collections::HashMap, net::IpAddr, net::SocketAddr};
 use thiserror::Error;
 use uuid::Uuid;
 
+/// Makes it much easier to use [scylla::FromRow] for the very large `system_traces.sessions` rows.
 pub type DbSessionRecord = (
     Uuid,
     IpAddr,
@@ -21,6 +22,8 @@ pub type DbSessionRecord = (
     i32,
     String,
 );
+
+/// Makes it much easier to use [scylla::FromRow] for the very large `system_traces.events` rows.
 pub type DbEventRecord = (Uuid, Uuid, String, IpAddr, i32, String, i64, i64);
 
 /// A source for the data based on an exported CSV.
@@ -39,7 +42,9 @@ impl DbSource {
     }
 }
 
-/// The kinds of errors that can be experienced while parsing the data from the CSV.
+/// The kinds of errors that can be experienced while parsing the data from the DB.
+///
+/// These are pretty much all just wrapping errors from [scylla].
 #[derive(Debug, Error)]
 pub enum DbParsingError {
     #[error("there was an issue creating your db session: {0}")]
