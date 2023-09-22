@@ -3,8 +3,8 @@ use crate::{
     records::{EventRecord, SessionRecord},
     Cli,
 };
-use chrono::{DateTime, Duration, FixedOffset};
-use std::{collections::VecDeque, net::IpAddr};
+use chrono::{DateTime, Duration, Utc};
+use std::{collections::VecDeque, fmt::Debug, net::IpAddr};
 use uuid::Uuid;
 
 /// All of the information related to a single tracing session.
@@ -34,13 +34,14 @@ pub struct Session {
     pub coordinator: IpAddr,
     /// Total duration of the Session
     pub duration: Duration,
+    // TODO FIX DOCS
     /// A scylla map containing string pairs that describe the query
     // Not currently parsing as a HashMap<String, String> due to issues with quoting
     pub parameters: String,
     /// A short string decribing the Session. Is _not_ the CQL query being ran; that is in `parameters`.
     pub request: String,
     /// DateTime of the start of this tracing session
-    pub started_at: DateTime<FixedOffset>,
+    pub started_at: DateTime<Utc>,
 
     /// Size of the request
     /// Since Scylla 3.0
@@ -57,7 +58,8 @@ pub struct Session {
     root_events: Vec<Event>,
 }
 
-impl Session {
+impl Session
+{
     pub(crate) fn new(session_record: SessionRecord, event_records: Vec<EventRecord>) -> Self {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
@@ -185,7 +187,7 @@ impl Session {
                 "parent span id",
                 "thread name",
             ),
-            w_width = cli.waterfall_width + 2
+            w_width = *cli.waterfall_width + 2
         )?;
 
         for (i, (e, depth)) in events.iter().enumerate() {

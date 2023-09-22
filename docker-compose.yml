@@ -1,0 +1,61 @@
+version: "3.7"
+
+networks:
+  public:
+    name: seella_test
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.10.0.0/16
+
+services:
+  scylla1:
+    image: scylladb/scylla
+    networks:
+      public:
+        ipv4_address: 172.10.0.2
+    command: |
+      --rpc-address 172.10.0.2
+      --listen-address 172.10.0.2
+      --seeds 172.10.0.2
+      --skip-wait-for-gossip-to-settle 0
+      --ring-delay-ms 0
+      --smp 1
+    healthcheck: &scylla-healthcheck
+      test: [ "CMD", "cqlsh", "-e", "select * from system.local" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+  scylla2:
+    image: scylladb/scylla
+    networks:
+      public:
+        ipv4_address: 172.10.0.3
+    command: |
+      --rpc-address 172.10.0.3
+      --listen-address 172.10.0.3
+      --seeds 172.10.0.2
+      --skip-wait-for-gossip-to-settle 0
+      --ring-delay-ms 0
+      --smp 1
+    healthcheck: *scylla-healthcheck
+    depends_on:
+      scylla1:
+        condition: service_healthy
+  scylla3:
+    image: scylladb/scylla
+    networks:
+      public:
+        ipv4_address: 172.10.0.4
+    command: |
+      --rpc-address 172.10.0.4
+      --listen-address 172.10.0.4
+      --seeds 172.10.0.2,172.10.0.3
+      --skip-wait-for-gossip-to-settle 0
+      --ring-delay-ms 0
+      --smp 1
+    healthcheck: *scylla-healthcheck
+    depends_on:
+      scylla2:
+        condition: service_healthy
