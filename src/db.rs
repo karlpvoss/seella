@@ -25,16 +25,16 @@ pub type DbEventRecord = (Uuid, Uuid, String, IpAddr, i32, String, i64, i64);
 
 /// A source for the data based on an exported CSV.
 #[derive(Debug)]
-pub struct DbSource<'a> {
+pub struct DbSource {
     addr: SocketAddr,
-    _session_id: &'a str,
+    session_id: Uuid,
 }
 
-impl<'a> DbSource<'a> {
-    pub fn new(addr: impl Into<SocketAddr>, session_id: &'a str) -> Self {
+impl<'a> DbSource {
+    pub fn new(addr: impl Into<SocketAddr>, session_id: Uuid) -> Self {
         Self {
             addr: addr.into(),
-            _session_id: session_id,
+            session_id,
         }
     }
 }
@@ -42,8 +42,6 @@ impl<'a> DbSource<'a> {
 /// The kinds of errors that can be experienced while parsing the data from the CSV.
 #[derive(Debug, Error)]
 pub enum DbParsingError {
-    #[error("the provided uuid could not be parsed: {0}")]
-    UuidParse(#[from] uuid::Error),
     #[error("there was an issue creating your db session: {0}")]
     NewSessionError(#[from] scylla::transport::errors::NewSessionError),
     #[error("the request resulted in a error: {0}")]
@@ -56,14 +54,14 @@ pub enum DbParsingError {
     FromRowError(#[from] scylla::cql_to_rust::FromRowError),
 }
 
-impl<'a> DbSource<'a> {
+impl DbSource {
     pub async fn get_data(&self) -> Result<(SessionRecord, Vec<EventRecord>), DbParsingError> {
         let conn = scylla::SessionBuilder::new()
             .known_node_addr(self.addr)
             .build()
             .await?;
 
-        let mut session_query = Query::from("SELECT session_id, client, command, coordinator, duration, parameters, request, started_at, request_size, response_size, username FROM system_traces.sessions WHERE session_id=b0d1d170-458d-11ee-bedb-a23daedf7a92");
+        let mut session_query = Query::from("SELECT session_id, client, command, coordinator, duration, parameters, request, started_at, request_size, response_size, username FROM system_traces.sessions WHERE session_id=?");
         session_query.set_consistency(Consistency::One);
         let (
             session_id,
@@ -77,7 +75,11 @@ impl<'a> DbSource<'a> {
             request_size,
             response_size,
             username,
-        ): DbSessionRecord = <_>::from_row(conn.query(session_query, ()).await?.first_row()?)?;
+        ): DbSessionRecord = <_>::from_row(
+            conn.query(session_query, (self.session_id,))
+                .await?
+                .first_row()?,
+        )?;
 
         let started_at = match Utc.timestamp_millis_opt(started_at) {
             LocalResult::Single(datetime) => datetime,
@@ -99,9 +101,9 @@ impl<'a> DbSource<'a> {
         };
 
         let mut event_query = Query::from(
-            "SELECT session_id, event_id, activity, source, source_elapsed, thread, scylla_parent_id, scylla_span_id FROM system_traces.events WHERE session_id=b0d1d170-458d-11ee-bedb-a23daedf7a92");
+            "SELECT session_id, event_id, activity, source, source_elapsed, thread, scylla_parent_id, scylla_span_id FROM system_traces.events WHERE session_id=?");
         event_query.set_consistency(Consistency::One);
-        let rows = conn.query(event_query, ()).await?.rows()?;
+        let rows = conn.query(event_query, (self.session_id,)).await?.rows()?;
 
         let mut event_records = vec![];
         for row in rows {

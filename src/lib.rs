@@ -47,6 +47,7 @@ pub async fn session_from_db(
     addr: SocketAddr,
     session_id: &str,
 ) -> Result<Session, Box<dyn std::error::Error>> {
+    let session_id = Uuid::try_parse(session_id)?;
     let (session_record, event_records) = DbSource::new(addr, session_id).get_data().await?;
     Ok(Session::new(session_record, event_records))
 }
