@@ -1,8 +1,11 @@
-use clap::{Args, Parser, Subcommand, ValueEnum};
-use std::{
-    ffi::OsString, fmt::Display, net::{SocketAddr, AddrParseError, SocketAddrV4, Ipv4Addr}, num::ParseIntError, ops::Deref, path::PathBuf,
-    str::FromStr,
-};
+use clap::{Parser, Subcommand, ValueEnum};
+use std::{fmt::Display, num::ParseIntError, ops::Deref, str::FromStr};
+
+mod csv;
+mod db;
+
+pub use csv::{CsvModeOptions, EventsPath, SessionsPath};
+pub use db::{DbAddr, DbModeOptions};
 
 //   ___ _    ___
 //  / __| |  |_ _|
@@ -63,113 +66,6 @@ pub enum OperationMode {
 impl Default for OperationMode {
     fn default() -> Self {
         OperationMode::Csv(CsvModeOptions::default())
-    }
-}
-
-//   ___ _____   __  __  __  ___  ___  ___
-//  / __/ __\ \ / / |  \/  |/ _ \|   \| __|
-// | (__\__ \\ V /  | |\/| | (_) | |) | _|
-//  \___|___/ \_/   |_|  |_|\___/|___/|___|
-
-/// Options that are specific to the CSV mode of operation.
-#[derive(Debug, Args, Clone, Default)]
-pub struct CsvModeOptions {
-    /// The session id to be visualised
-    pub session_id: String,
-
-    /// Path to the CSV containing the sessions data. Any string that can be coerced into a PathBuf
-    #[arg(short, long, default_value_t)]
-    pub sessions_path: SessionsPath,
-
-    /// Path to the CSV containing the events data. Any string that can be coerced into a PathBuf
-    #[arg(short, long, default_value_t)]
-    pub events_path: EventsPath,
-}
-
-//  ___  ___   __  __  ___  ___  ___
-// |   \| _ ) |  \/  |/ _ \|   \| __|
-// | |) | _ \ | |\/| | (_) | |) | _|
-// |___/|___/ |_|  |_|\___/|___/|___|
-
-#[derive(Debug, Args, Clone, Default)]
-pub struct DbModeOptions {
-    pub session_id: String,
-
-    #[arg(short, long, default_value_t)]
-    pub addr: DbAddr,
-}
-
-//  ___ ___ ___ ___ ___ ___  _  _ ___   ___  _ _____ _  _
-// / __| __/ __/ __|_ _/ _ \| \| / __| | _ \/_\_   _| || |
-// \__ \ _|\__ \__ \| | (_) | .` \__ \ |  _/ _ \| | | __ |
-// |___/___|___/___/___\___/|_|\_|___/ |_|/_/ \_\_| |_||_|
-
-/// Default path to the [Session][crate::SessionRecord] source.
-///
-/// Type to provide a correct `Default::default()` PathBuf for clap.
-#[derive(Debug, Clone)]
-pub struct SessionsPath(pub PathBuf);
-
-impl Default for SessionsPath {
-    fn default() -> Self {
-        Self(PathBuf::from("sessions.csv"))
-    }
-}
-
-impl Display for SessionsPath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.display())
-    }
-}
-
-impl From<OsString> for SessionsPath {
-    fn from(value: OsString) -> Self {
-        Self(PathBuf::from(value))
-    }
-}
-
-impl Deref for SessionsPath {
-    type Target = PathBuf;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-//  _____   _____ _  _ _____ ___   ___  _ _____ _  _
-// | __\ \ / / __| \| |_   _/ __| | _ \/_\_   _| || |
-// | _| \ V /| _|| .` | | | \__ \ |  _/ _ \| | | __ |
-// |___| \_/ |___|_|\_| |_| |___/ |_|/_/ \_\_| |_||_|
-
-/// Default path to the [Event][crate::EventRecord] source.
-///
-/// Type to provide a correct `Default::default()` PathBuf for clap.
-#[derive(Debug, Clone)]
-pub struct EventsPath(pub PathBuf);
-
-impl Default for EventsPath {
-    fn default() -> Self {
-        Self(PathBuf::from("events.csv"))
-    }
-}
-
-impl Display for EventsPath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.display())
-    }
-}
-
-impl From<OsString> for EventsPath {
-    fn from(value: OsString) -> Self {
-        Self(PathBuf::from(value))
-    }
-}
-
-impl Deref for EventsPath {
-    type Target = PathBuf;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
@@ -297,42 +193,6 @@ impl FromStr for MaxActivityWidth {
 
 impl Deref for MaxActivityWidth {
     type Target = usize;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-// ___  ___     _   ___  ___  ___ 
-// |   \| _ )   /_\ |   \|   \| _ \
-// | |) | _ \  / _ \| |) | |) |   /
-// |___/|___/ /_/ \_\___/|___/|_|_\
-
-#[derive(Debug, Clone)]
-pub struct DbAddr(pub SocketAddr);
-
-impl Default for DbAddr {
-    fn default() -> Self {
-        Self(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 9042)))
-    }
-}
-
-impl Display for DbAddr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl FromStr for DbAddr {
-    type Err = AddrParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(SocketAddr::from_str(s)?))
-    }
-}
-
-impl Deref for DbAddr {
-    type Target = SocketAddr;
 
     fn deref(&self) -> &Self::Target {
         &self.0
