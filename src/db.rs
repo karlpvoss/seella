@@ -30,7 +30,7 @@ pub struct DbSource {
     session_id: Uuid,
 }
 
-impl<'a> DbSource {
+impl DbSource {
     pub fn new(addr: impl Into<SocketAddr>, session_id: Uuid) -> Self {
         Self {
             addr: addr.into(),
@@ -43,15 +43,19 @@ impl<'a> DbSource {
 #[derive(Debug, Error)]
 pub enum DbParsingError {
     #[error("there was an issue creating your db session: {0}")]
-    NewSessionError(#[from] scylla::transport::errors::NewSessionError),
+    NewSession(#[from] scylla::transport::errors::NewSessionError),
+
     #[error("the request resulted in a error: {0}")]
-    ScyllaQueryError(#[from] scylla::transport::errors::QueryError),
+    ScyllaQuery(#[from] scylla::transport::errors::QueryError),
+
     #[error("we didn't get any results back from the db: {0}")]
-    FirstRowError(#[from] scylla::transport::query_result::FirstRowError),
+    FirstRow(#[from] scylla::transport::query_result::FirstRowError),
+
     #[error("we didn't get any results back from the db: {0}")]
-    RowsExpectedError(#[from] scylla::transport::query_result::RowsExpectedError),
+    RowsExpected(#[from] scylla::transport::query_result::RowsExpectedError),
+
     #[error("there was an issue parsing the data from the returned row: {0}")]
-    FromRowError(#[from] scylla::cql_to_rust::FromRowError),
+    FromRow(#[from] scylla::cql_to_rust::FromRowError),
 }
 
 impl DbSource {
