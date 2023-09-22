@@ -1,21 +1,19 @@
-COMPOSE := docker compose
-
 .PHONY: watch
 watch:
 	cargo watch -x check -x clippy
 
 .PHONY: up
 up:
-	$(COMPOSE) up -d --wait
+	docker compose up -d --wait
 
 .PHONY: down
 down:
-	$(COMPOSE) down --remove-orphans
+	docker compose down --remove-orphans
 
 .PHONY: logs
 logs:
-	$(COMPOSE) logs -f
+	docker compose logs -f
 
 .PHONY: cqlsh
 cqlsh:
-	$(COMPOSE) exec scylla1 cqlsh -u cassandra -p cassandra
+	docker compose exec scylla1 cqlsh -u cassandra -p cassandra
