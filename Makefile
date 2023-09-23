@@ -21,3 +21,7 @@ logs:
 .PHONY: cqlsh
 cqlsh:
 	docker compose exec scylla1 cqlsh -u cassandra -p cassandra
+
+.PHONY: init-db
+init-db:
+	docker compose exec scylla1 cqlsh -u cassandra -p cassandra -f /data/load-db.cql
