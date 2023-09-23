@@ -15,6 +15,10 @@ services:
     networks:
       public:
         ipv4_address: 172.10.0.2
+    volumes:
+      - type: bind
+        source: ./tests/data
+        target: /data
     command: |
       --rpc-address 172.10.0.2
       --listen-address 172.10.0.2
