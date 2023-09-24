@@ -6,6 +6,10 @@ readme:
 watch:
 	cargo watch -x check -x clippy
 
+.PHONY: pre-tag
+pre-tag:
+	cargo check; cargo clippy; cargo build --release; cargo test; cargo test --release; cargo package
+
 .PHONY: up
 up:
 	docker compose up -d --wait
