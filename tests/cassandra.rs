@@ -49,6 +49,8 @@ Execute CQL3 query
 10 [                                     █████████████████████                                          ] 333    172.17.0.2      ├─ Delay decision due to throttling: do not delay, resuming now                            
 11 [                                                          ████████████████████                      ] 339    172.17.0.2      ├─ Mutation successfully completed                                                         
 12 [                                                                              ██████████████████████] 344    172.17.0.2      ├─ Done processing - preparing a result                                                    
+                                                                                                          ----                                                                                                            
+                                                                                                          1633                                                                                                            
 "#.as_bytes());
 
     Ok(())
@@ -102,6 +104,8 @@ Execute CQL3 query
 10 [                  ███████████                     ] 333    172.17.0.2      ├─ Delay decision due to throttling: do not delay, resuming now                             74ff7dcb-397b-11ee-8ca4-9688db6cc0f1  0                    0                    shard 0
 11 [                             ██████████           ] 339    172.17.0.2      ├─ Mutation successfully completed                                                          74ff7e09-397b-11ee-8ca4-9688db6cc0f1  0                    0                    shard 0
 12 [                                       ███████████] 344    172.17.0.2      ├─ Done processing - preparing a result                                                     74ff7e3a-397b-11ee-8ca4-9688db6cc0f1  0                    0                    shard 0
+                                                        ----                                                                                                                                                                                             
+                                                        1633                                                                                                                                                                                             
 "#.as_bytes());
 
     Ok(())
