@@ -58,8 +58,7 @@ pub struct Session {
     root_events: Vec<Event>,
 }
 
-impl Session
-{
+impl Session {
     pub(crate) fn new(session_record: SessionRecord, event_records: Vec<EventRecord>) -> Self {
         let (mut root_events, mut child_events): (VecDeque<Event>, VecDeque<Event>) = event_records
             .into_iter()
@@ -167,6 +166,7 @@ impl Session
             .unwrap_or(0);
         let max_depth = events.iter().map(|(_, depth)| *depth).max().unwrap_or(1);
         let i_max_width = self.event_count().to_string().len();
+        let w_width = *cli.waterfall_width + 2;
 
         // Headers
         writeln!(w)?;
@@ -186,10 +186,10 @@ impl Session
                 "span id",
                 "parent span id",
                 "thread name",
-            ),
-            w_width = *cli.waterfall_width + 2
+            )
         )?;
 
+        // print out the actual chart and details
         for (i, (e, depth)) in events.iter().enumerate() {
             writeln!(
                 w,
@@ -202,6 +202,35 @@ impl Session
             // Move the offset up for the next event
             offset += e.durations().1;
         }
+
+        // total duration information
+        let total_dur = self.total_duration().to_string();
+        let total_dur_width = total_dur.len();
+        writeln!(
+            w,
+            "{:i_max_width$} {:w_width$} {}",
+            "",
+            "",
+            crate::event_display_str(
+                &cli,
+                a_max_width,
+                &format!("{:-<total_dur_width$}", ""),
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            )
+        )?;
+        writeln!(
+            w,
+            "{:i_max_width$} {:w_width$} {}",
+            "",
+            "",
+            crate::event_display_str(&cli, a_max_width, &total_dur, "", "", "", "", "", "", "",)
+        )?;
 
         Ok(())
     }
